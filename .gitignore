@@ -1,0 +1,11 @@
+# Cache/HTTrack artifacts
+hts-cache/
+hts-log.txt
+cookies.txt
+
+# Hosted export artifacts
+pub-*.r2.dev/
+
+# OS files
+.DS_Store
+Thumbs.db
