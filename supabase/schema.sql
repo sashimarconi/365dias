@@ -1,6 +1,6 @@
 create table if not exists products (
   id uuid primary key default gen_random_uuid(),
-  type text not null check (type in ('base', 'bump', 'upsell')),
+  type text not null check (type in ('base', 'bump', 'upsell', 'shipping')),
   name text not null,
   description text,
   price_cents integer not null check (price_cents >= 0),

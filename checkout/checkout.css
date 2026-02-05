@@ -99,7 +99,7 @@ body {
 .product-card__media img {
   width: 76px;
   height: 112px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 10px;
 }
 
@@ -192,6 +192,45 @@ body {
   gap: 16px;
 }
 
+.address__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.address__header h3 {
+  margin: 0 0 4px;
+}
+
+.address__header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.address__toggle {
+  border: 1px solid var(--border);
+  background: #f5f6fb;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.address__toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.address__content.hidden {
+  display: none;
+}
+
+.address--collapsed {
+  background: #f8f9ff;
+}
+
 .address h3 {
   margin: 0;
 }
@@ -204,6 +243,76 @@ body {
 
 .address__grid .field input[readonly] {
   background: #f7f7fb;
+}
+
+.shipping {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 18px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shipping h3 {
+  margin: 0;
+}
+
+.shipping.hidden {
+  display: none;
+}
+
+.shipping__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shipping-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  gap: 16px;
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.shipping-card__info {
+  display: grid;
+  gap: 4px;
+}
+
+.shipping-card__info small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.shipping-card__price {
+  font-weight: 600;
+  margin-left: auto;
+  padding-right: 12px;
+}
+
+.shipping-card input[type="radio"] {
+  accent-color: #10a343;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+}
+
+.shipping-card--selected {
+  border-color: #33c466;
+  background: #f3fff6;
+  box-shadow: 0 12px 30px rgba(51, 196, 102, 0.25);
+}
+
+.shipping-card--gratis .shipping-card__price {
+  color: #0f9d58;
 }
 
 .phone-field {

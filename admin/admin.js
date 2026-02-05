@@ -82,6 +82,7 @@ function renderItems(items) {
           <option value="base" ${item.type === "base" ? "selected" : ""}>Base</option>
           <option value="bump" ${item.type === "bump" ? "selected" : ""}>Bump</option>
           <option value="upsell" ${item.type === "upsell" ? "selected" : ""}>Upsell</option>
+          <option value="shipping" ${item.type === "shipping" ? "selected" : ""}>Frete</option>
         </select>
         <select data-field="active">
           <option value="true" ${item.active ? "selected" : ""}>Ativo</option>

@@ -73,58 +73,72 @@
             </div>
           </div>
 
-          <section class="address">
-            <h3>Entrega</h3>
-            <div class="address__grid">
-              <label class="field field--full">
-                CEP
-                <input
-                  id="cep"
-                  name="cep"
-                  inputmode="numeric"
-                  pattern="\d{5}-?\d{3}"
-                  required
-                  placeholder="00000-000"
-                />
-                <small class="helper">Digite um CEP válido e aguarde o preenchimento automático.</small>
-                <p id="cep-error" class="field-error hidden"></p>
-              </label>
+          <section class="address address--collapsed" id="address-card">
+            <header class="address__header">
+              <div>
+                <h3>Entrega</h3>
+                <p>Preencha o endereço para liberar o frete.</p>
+              </div>
+              <button type="button" id="address-toggle" class="address__toggle" disabled>
+                Adicionar endereço
+              </button>
+            </header>
+            <div id="address-content" class="address__content hidden">
+              <div class="address__grid">
+                <label class="field field--full">
+                  CEP
+                  <input
+                    id="cep"
+                    name="cep"
+                    inputmode="numeric"
+                    pattern="\d{5}-?\d{3}"
+                    placeholder="00000-000"
+                  />
+                  <small class="helper">Digite um CEP válido e aguarde o preenchimento automático.</small>
+                  <p id="cep-error" class="field-error hidden"></p>
+                </label>
 
-              <label class="field field--full">
-                Endereço
-                <input id="address-street" name="street" readonly placeholder="Rua" />
-              </label>
+                <label class="field field--full">
+                  Endereço
+                  <input id="address-street" name="street" readonly placeholder="Rua" />
+                </label>
 
-              <label class="field">
-                Número
-                <input id="address-number" name="address_number" required placeholder="Digite o número" />
-              </label>
+                <label class="field">
+                  Número
+                  <input id="address-number" name="address_number" placeholder="Digite o número" />
+                </label>
 
-              <label class="field">
-                Complemento
-                <input id="address-complement" name="complement" placeholder="Apartamento, bloco, etc." />
-              </label>
+                <label class="field">
+                  Complemento
+                  <input id="address-complement" name="complement" placeholder="Apartamento, bloco, etc." />
+                </label>
 
-              <label class="field">
-                Bairro
-                <input id="address-neighborhood" name="neighborhood" readonly placeholder="Bairro" />
-              </label>
+                <label class="field">
+                  Bairro
+                  <input id="address-neighborhood" name="neighborhood" readonly placeholder="Bairro" />
+                </label>
 
-              <label class="field">
-                Cidade
-                <input id="address-city" name="city" readonly placeholder="Cidade" />
-              </label>
+                <label class="field">
+                  Cidade
+                  <input id="address-city" name="city" readonly placeholder="Cidade" />
+                </label>
 
-              <label class="field">
-                Estado
-                <input id="address-state" name="state" readonly placeholder="UF" />
-              </label>
+                <label class="field">
+                  Estado
+                  <input id="address-state" name="state" readonly placeholder="UF" />
+                </label>
 
-              <label class="field">
-                País
-                <input id="address-country" name="country" readonly value="Brasil" />
-              </label>
+                <label class="field">
+                  País
+                  <input id="address-country" name="country" readonly value="Brasil" />
+                </label>
+              </div>
             </div>
+          </section>
+
+          <section id="shipping-section" class="shipping hidden">
+            <h3>Escolha o melhor frete para você</h3>
+            <div id="shipping-list" class="shipping__list"></div>
           </section>
 
           <section id="addons-section" class="addons hidden">
@@ -153,6 +167,10 @@
             <div class="summary__line summary__line--discount">
               <span>Desconto automático</span>
               <strong id="summary-discount">R$ 0,00</strong>
+            </div>
+            <div class="summary__line">
+              <span>Frete</span>
+              <strong id="summary-shipping">R$ 0,00</strong>
             </div>
             <div class="summary__total">
               <span>Total</span>
