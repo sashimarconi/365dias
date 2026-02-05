@@ -18104,7 +18104,7 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                     v.jsx("p", {
                       className: "font-body text-primary-foreground/80 mt-1",
                       children:
-                        "+ Calendário com Plano Espiritual (Bônus Grátis)",
+                        "+ Mulheres com Deus (Bônus Exclusivo)",
                     }),
                   ],
                 }),
@@ -18123,7 +18123,7 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                                 "font-body text-lg text-muted-foreground line-through",
                               children: [
                                 "R$ ",
-                                (29.9).toFixed(2).replace(".", ","),
+                                (82.70).toFixed(2).replace(".", ","),
                               ],
                             }),
                             v.jsx("span", {
@@ -18144,12 +18144,12 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                             v.jsx("span", {
                               className:
                                 "font-display text-6xl lg:text-7xl font-bold text-foreground",
-                              children: "19",
+                              children: "82",
                             }),
                             v.jsx("span", {
                               className:
                                 "font-display text-3xl font-bold text-foreground",
-                              children: ",90",
+                              children: ",70",
                             }),
                           ],
                         }),
