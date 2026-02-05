@@ -18133,7 +18133,7 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                             }),
                             v.jsx("span", {
                               className:
-                                "bg-gold/20 text-gold px-3 py-1 rounded-full text-sm font-medium",
+                                "bg-red-100/80 text-red-600 px-3 py-1 rounded-full text-sm font-medium",
                               children: "-64% OFF",
                             }),
                           ],
