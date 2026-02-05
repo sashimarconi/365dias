@@ -18112,7 +18112,8 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                   className: "p-8 lg:p-12",
                   children: [
                     v.jsxs("div", {
-                      className: "text-center mb-8",
+                      className:
+                        "text-center mb-8 bg-cream-dark/60 border border-gold/30 rounded-2xl p-6",
                       children: [
                         v.jsxs("div", {
                           className:
@@ -18138,54 +18139,18 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                           children: [
                             v.jsx("span", {
                               className:
-                                "font-body text-2xl text-muted-foreground",
+                                "font-body text-2xl text-red-600",
                               children: "R$",
                             }),
                             v.jsx("span", {
                               className:
-                                "font-display text-6xl lg:text-7xl font-bold text-foreground",
+                                "font-display text-6xl lg:text-7xl font-bold text-red-600",
                               children: "29",
                             }),
                             v.jsx("span", {
                               className:
-                                "font-display text-3xl font-bold text-foreground",
+                                "font-display text-3xl font-bold text-red-600",
                               children: ",90",
-                            }),
-                          ],
-                        }),
-                      ],
-                    }),
-                    v.jsxs("div", {
-                      className:
-                        "bg-gradient-to-r from-gold/10 via-gold/20 to-gold/10 border border-gold/30 rounded-2xl p-6 mb-8",
-                      children: [
-                        v.jsxs("div", {
-                          className:
-                            "flex items-center justify-center gap-3 mb-3",
-                          children: [
-                            v.jsx(l1, { className: "w-6 h-6 text-gold" }),
-                            v.jsx("span", {
-                              className:
-                                "font-display text-xl font-semibold text-foreground",
-                              children: "15% de desconto pagando no Pix",
-                            }),
-                          ],
-                        }),
-                        v.jsxs("div", {
-                          className: "text-center",
-                          children: [
-                            v.jsxs("span", {
-                              className:
-                                "font-display text-4xl lg:text-5xl font-bold text-gold",
-                              children: [
-                                "R$ ",
-                                (16.915).toFixed(2).replace(".", ","),
-                              ],
-                            }),
-                            v.jsx("p", {
-                              className:
-                                "font-body text-sm text-muted-foreground mt-2",
-                              children: "Pagamento instantâneo e seguro",
                             }),
                           ],
                         }),
