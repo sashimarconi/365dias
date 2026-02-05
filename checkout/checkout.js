@@ -14,7 +14,6 @@ const selectAll = document.getElementById("select-all");
 const selectAllText = document.getElementById("select-all-text");
 const summaryLines = document.getElementById("summary-lines");
 const summarySubtotal = document.getElementById("summary-subtotal");
-const summaryDiscount = document.getElementById("summary-discount");
 const summaryShipping = document.getElementById("summary-shipping");
 const summaryTotal = document.getElementById("summary-total");
 const summaryCount = document.getElementById("summary-count");
@@ -39,8 +38,6 @@ const contactInputs = [
 ].filter(Boolean);
 const shippingSection = document.getElementById("shipping-section");
 const shippingList = document.getElementById("shipping-list");
-
-const PIX_DISCOUNT_PERCENT = 0.15;
 
 let offerData = null;
 let selectedBumps = new Set();
@@ -82,10 +79,6 @@ function calcSubtotal() {
   return total;
 }
 
-function calcDiscount(subtotal) {
-  return Math.floor(subtotal * PIX_DISCOUNT_PERCENT);
-}
-
 function getSelectedShipping() {
   return shippingOptions.find((option) => option.id === selectedShippingId) || null;
 }
@@ -96,16 +89,14 @@ function calcShipping() {
 
 function calcTotal() {
   const subtotal = calcSubtotal();
-  const discount = calcDiscount(subtotal);
   const shipping = calcShipping();
-  return Math.max(subtotal - discount + shipping, 0);
+  return Math.max(subtotal + shipping, 0);
 }
 
 function updateSummary() {
   if (!offerData?.base) {
     summaryLines.innerHTML = "";
     summarySubtotal.textContent = "R$ 0,00";
-    summaryDiscount.textContent = "R$ 0,00";
     if (summaryShipping) summaryShipping.textContent = "R$ 0,00";
     summaryTotal.textContent = "R$ 0,00";
     if (summaryCount) summaryCount.textContent = "0 itens";
@@ -138,11 +129,9 @@ function updateSummary() {
     .join("");
 
   const subtotal = calcSubtotal();
-  const discount = calcDiscount(subtotal);
   const shipping = calcShipping();
-  const total = Math.max(subtotal - discount + shipping, 0);
+  const total = Math.max(subtotal + shipping, 0);
   summarySubtotal.textContent = `R$ ${formatPrice(subtotal)}`;
-  summaryDiscount.textContent = `-R$ ${formatPrice(discount)}`;
   if (summaryShipping) {
     summaryShipping.textContent = shipping === 0 ? "Frete Grátis" : `R$ ${formatPrice(shipping)}`;
   }
