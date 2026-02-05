@@ -18113,7 +18113,11 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                   children: [
                     v.jsxs("div", {
                       className:
-                        "text-center mb-8 bg-olive/10 border border-olive/20 rounded-2xl p-6 shadow-card",
+                        "text-center mb-8 border rounded-2xl p-6 shadow-card",
+                      style: {
+                        backgroundColor: "hsl(var(--olive) / .12)",
+                        borderColor: "hsl(var(--olive) / .2)",
+                      },
                       children: [
                         v.jsxs("div", {
                           className:
@@ -18130,7 +18134,7 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                             v.jsx("span", {
                               className:
                                 "bg-gold/20 text-gold px-3 py-1 rounded-full text-sm font-medium",
-                              children: "-33% OFF",
+                              children: "-64% OFF",
                             }),
                           ],
                         }),
