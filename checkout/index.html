@@ -4,45 +4,150 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Checkout Pix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="checkout.css" />
   </head>
   <body>
     <main class="page">
-      <section class="card">
-        <header class="card__header">
-          <h1>Checkout Pix</h1>
-          <p>Pagamento rapido e seguro.</p>
+      <section class="checkout">
+        <header class="country-switcher">
+          <div class="country-switcher__flag">🇧🇷</div>
+          <span>Brasil</span>
+          <button
+            type="button"
+            class="country-switcher__toggle"
+            aria-label="Trocar país"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+          </button>
         </header>
 
-        <div id="offer" class="offer"></div>
+        <article class="product-card">
+          <div class="product-card__media">
+            <img
+              id="product-cover"
+              src="https://dummyimage.com/200x280/f0f0f0/aaa&text=Livro"
+              alt="Capa do produto"
+            />
+          </div>
+          <div class="product-card__body">
+            <p class="product-card__badge">Devocional digital</p>
+            <h1 id="product-title">Devocional - 365 Dias de Amor com Deus</h1>
+            <p id="product-description">
+              Receba instantaneamente no seu e-mail e comece hoje o seu novo hábito com Deus.
+            </p>
+            <strong id="product-price">R$ 0,00</strong>
+          </div>
+        </article>
+
+        <hr class="divider" />
 
         <form id="checkout-form" class="form">
-          <h2>Seus dados</h2>
-          <label>
-            Nome completo
-            <input type="text" name="name" required />
-          </label>
-          <label>
-            E-mail
-            <input type="email" name="email" required />
-          </label>
-          <label>
-            Celular
-            <input type="tel" name="cellphone" />
-          </label>
-          <label>
-            CPF
-            <input type="text" name="taxId" />
-          </label>
+          <div class="form__group">
+            <div class="field">
+              <label for="email">Seu e-mail</label>
+              <input id="email" type="email" name="email" required placeholder="Insira seu e-mail" />
+            </div>
+            <div class="field">
+              <label for="email-confirm">Confirme seu e-mail</label>
+              <input
+                id="email-confirm"
+                type="email"
+                name="email_confirm"
+                required
+                placeholder="Insira novamente seu e-mail"
+              />
+            </div>
+          </div>
 
-          <button id="pay-btn" type="submit">Gerar Pix</button>
+          <div class="field">
+            <label for="full-name">Nome completo</label>
+            <input id="full-name" type="text" name="name" required placeholder="Insira seu nome completo" />
+          </div>
+
+          <div class="field">
+            <label for="tax-id">CPF/CNPJ</label>
+            <input id="tax-id" type="text" name="taxId" placeholder="Insira seu CPF ou CNPJ" />
+          </div>
+
+          <div class="field">
+            <label for="cellphone">Seu celular</label>
+            <div class="phone-field">
+              <span class="phone-field__code">🇧🇷 +55</span>
+              <input id="cellphone" type="tel" name="cellphone" placeholder="Insira seu celular" />
+            </div>
+          </div>
+
+          <div class="payment">
+            <div class="payment__options">
+              <button type="button" class="payment-option" data-method="credit" data-disabled="true">
+                <span>Cartão de crédito</span>
+              </button>
+              <button type="button" class="payment-option is-active" data-method="pix">
+                <span>Pix</span>
+                <span class="pill" id="pix-discount-pill">15% OFF</span>
+              </button>
+            </div>
+            <div class="payment__note">
+              <strong>Pagamento rápido e direto</strong>
+              <p>Finalize sua compra em segundos com total segurança e confirmação imediata.</p>
+            </div>
+          </div>
+
+          <section id="addons-section" class="addons hidden">
+            <header class="addons__header">
+              <div>
+                <p class="eyebrow">Você pode gostar</p>
+              </div>
+              <label class="select-all">
+                <input type="checkbox" id="select-all" />
+                <span>Selecionar todos</span>
+              </label>
+            </header>
+            <div id="addons-list" class="addons__list"></div>
+          </section>
+
+          <section class="summary">
+            <h3>Resumo</h3>
+            <div id="summary-lines" class="summary__lines"></div>
+            <div class="summary__line">
+              <span>Subtotal</span>
+              <strong id="summary-subtotal">R$ 0,00</strong>
+            </div>
+            <div class="summary__line summary__line--discount">
+              <span>Desconto automático</span>
+              <strong id="summary-discount">R$ 0,00</strong>
+            </div>
+            <div class="summary__total">
+              <span>Total</span>
+              <strong id="summary-total">R$ 0,00</strong>
+            </div>
+          </section>
+
+          <button id="pay-btn" type="submit" class="cta">Comprar agora</button>
+          <p class="trust">Ambiente seguro • Seus dados são confidenciais</p>
         </form>
 
         <section id="pix-result" class="pix hidden">
-          <h2>Pix gerado</h2>
-          <img id="pix-qr" alt="QR Code Pix" />
-          <textarea id="pix-code" readonly></textarea>
-          <button id="copy-btn" type="button">Copiar codigo</button>
+          <div class="pix__content">
+            <div>
+              <h2>Pix gerado</h2>
+              <p>Escaneie o QR Code ou copie o código abaixo para pagar.</p>
+            </div>
+            <img id="pix-qr" alt="QR Code Pix" />
+          </div>
+          <label class="field">
+            Código Pix
+            <textarea id="pix-code" readonly></textarea>
+          </label>
+          <button id="copy-btn" type="button" class="ghost">Copiar código</button>
         </section>
       </section>
     </main>
