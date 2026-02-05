@@ -73,6 +73,60 @@
             </div>
           </div>
 
+          <section class="address">
+            <h3>Entrega</h3>
+            <div class="address__grid">
+              <label class="field field--full">
+                CEP
+                <input
+                  id="cep"
+                  name="cep"
+                  inputmode="numeric"
+                  pattern="\d{5}-?\d{3}"
+                  required
+                  placeholder="00000-000"
+                />
+                <small class="helper">Digite um CEP válido e aguarde o preenchimento automático.</small>
+                <p id="cep-error" class="field-error hidden"></p>
+              </label>
+
+              <label class="field field--full">
+                Endereço
+                <input id="address-street" name="street" readonly placeholder="Rua" />
+              </label>
+
+              <label class="field">
+                Número
+                <input id="address-number" name="address_number" required placeholder="Digite o número" />
+              </label>
+
+              <label class="field">
+                Complemento
+                <input id="address-complement" name="complement" placeholder="Apartamento, bloco, etc." />
+              </label>
+
+              <label class="field">
+                Bairro
+                <input id="address-neighborhood" name="neighborhood" readonly placeholder="Bairro" />
+              </label>
+
+              <label class="field">
+                Cidade
+                <input id="address-city" name="city" readonly placeholder="Cidade" />
+              </label>
+
+              <label class="field">
+                Estado
+                <input id="address-state" name="state" readonly placeholder="UF" />
+              </label>
+
+              <label class="field">
+                País
+                <input id="address-country" name="country" readonly value="Brasil" />
+              </label>
+            </div>
+          </section>
+
           <section id="addons-section" class="addons hidden">
             <header class="addons__header">
               <div>

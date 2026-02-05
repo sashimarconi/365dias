@@ -17,12 +17,24 @@ const summarySubtotal = document.getElementById("summary-subtotal");
 const summaryDiscount = document.getElementById("summary-discount");
 const summaryTotal = document.getElementById("summary-total");
 const summaryCount = document.getElementById("summary-count");
+const cepInput = document.getElementById("cep");
+const cepError = document.getElementById("cep-error");
+const addressInputs = {
+  street: document.getElementById("address-street"),
+  number: document.getElementById("address-number"),
+  complement: document.getElementById("address-complement"),
+  neighborhood: document.getElementById("address-neighborhood"),
+  city: document.getElementById("address-city"),
+  state: document.getElementById("address-state"),
+  country: document.getElementById("address-country"),
+};
 
 const PIX_DISCOUNT_PERCENT = 0.15;
 
 let offerData = null;
 let selectedBumps = new Set();
 let bumpMap = new Map();
+let lastCepFilled = "";
 
 function formatPrice(cents) {
   return (cents / 100).toFixed(2).replace(".", ",");
@@ -126,6 +138,78 @@ function syncSelectAllState() {
   setSelectAllLabel(allSelected);
 }
 
+function normalizeCep(value = "") {
+  return value.replace(/\D/g, "").slice(0, 8);
+}
+
+function formatCepDisplay(value = "") {
+  const digits = normalizeCep(value);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function clearAddressFields() {
+  Object.entries(addressInputs).forEach(([key, input]) => {
+    if (!input) return;
+    if (key === "country") {
+      input.value = "Brasil";
+      return;
+    }
+    if (key === "number" || key === "complement") {
+      return;
+    }
+    input.value = "";
+  });
+}
+
+function fillAddressFields(data) {
+  if (addressInputs.street) addressInputs.street.value = data.logradouro || "";
+  if (addressInputs.neighborhood) addressInputs.neighborhood.value = data.bairro || "";
+  if (addressInputs.city) addressInputs.city.value = data.localidade || "";
+  if (addressInputs.state) addressInputs.state.value = data.uf || "";
+  if (addressInputs.country && !addressInputs.country.value) {
+    addressInputs.country.value = "Brasil";
+  }
+}
+
+function showCepError(message) {
+  if (!cepError) return;
+  if (message) {
+    cepError.textContent = message;
+    cepError.classList.remove("hidden");
+  } else {
+    cepError.classList.add("hidden");
+    cepError.textContent = "";
+  }
+}
+
+async function lookupCep(value) {
+  const cep = normalizeCep(value);
+  if (cep.length !== 8) {
+    showCepError("Informe um CEP com 8 dígitos.");
+    clearAddressFields();
+    return;
+  }
+
+  showCepError("");
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    if (!response.ok) {
+      throw new Error("CEP inválido");
+    }
+    const data = await response.json();
+    if (data.erro) {
+      throw new Error("CEP não encontrado");
+    }
+    fillAddressFields(data);
+    cepInput.value = formatCepDisplay(data.cep);
+    lastCepFilled = data.cep;
+  } catch (error) {
+    showCepError("Não foi possível localizar o CEP informado.");
+    clearAddressFields();
+  }
+}
+
 function renderBumps(bumps = []) {
   bumpMap = new Map();
   selectedBumps.clear();
@@ -183,7 +267,7 @@ function renderBumps(bumps = []) {
   updateSummary();
 }
 
-if (selectAll) {
+if (selectAll && addonsList) {
   selectAll.addEventListener("change", () => {
     const shouldSelect = selectAll.checked;
     addonsList.querySelectorAll("input[data-bump-id]").forEach((input) => {
@@ -200,6 +284,20 @@ if (selectAll) {
     });
     setSelectAllLabel(shouldSelect);
     updateSummary();
+  });
+}
+
+if (cepInput) {
+  cepInput.addEventListener("input", (event) => {
+    const formatted = formatCepDisplay(event.target.value);
+    event.target.value = formatted;
+    if (formatted.length < 9) {
+      showCepError("");
+    }
+  });
+
+  cepInput.addEventListener("blur", (event) => {
+    lookupCep(event.target.value);
   });
 }
 
@@ -235,6 +333,14 @@ form.addEventListener("submit", async (event) => {
   }
   const formData = new FormData(form);
   const email = formData.get("email");
+  const street = formData.get("street");
+  const city = formData.get("city");
+  const state = formData.get("state");
+
+  if (!street || !city || !state) {
+    alert("Preencha um CEP válido para continuar.");
+    return;
+  }
 
   payBtn.disabled = true;
   const originalText = payBtn.textContent;
@@ -247,6 +353,19 @@ form.addEventListener("submit", async (event) => {
     taxId: formData.get("taxId"),
   };
 
+  const address = {
+    cep: formData.get("cep"),
+    street,
+    number: formData.get("address_number"),
+    complement: formData.get("complement"),
+    neighborhood: formData.get("neighborhood"),
+    city,
+    state,
+    country: formData.get("country"),
+  };
+
+  customer.address = address;
+
   const payload = {
     amount: calcTotal(),
     description: offerData.base.name,
@@ -255,6 +374,7 @@ form.addEventListener("submit", async (event) => {
       utm: getUtmParams(),
       src: window.location.href,
     },
+    address,
     fbp: getCookie("_fbp"),
     fbc: getCookie("_fbc"),
     user_agent: navigator.userAgent,

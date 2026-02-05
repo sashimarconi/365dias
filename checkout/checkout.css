@@ -167,6 +167,45 @@ body {
   resize: vertical;
 }
 
+.helper {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field-error {
+  font-size: 12px;
+  color: #c41c1c;
+  margin: 0;
+}
+
+.field--full {
+  grid-column: 1 / -1;
+}
+
+.address {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.address h3 {
+  margin: 0;
+}
+
+.address__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.address__grid .field input[readonly] {
+  background: #f7f7fb;
+}
+
 .phone-field {
   display: flex;
   border: 1px solid var(--border);
