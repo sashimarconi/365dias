@@ -11,10 +11,12 @@ const productPrice = document.getElementById("product-price");
 const addonsSection = document.getElementById("addons-section");
 const addonsList = document.getElementById("addons-list");
 const selectAll = document.getElementById("select-all");
+const selectAllText = document.getElementById("select-all-text");
 const summaryLines = document.getElementById("summary-lines");
 const summarySubtotal = document.getElementById("summary-subtotal");
 const summaryDiscount = document.getElementById("summary-discount");
 const summaryTotal = document.getElementById("summary-total");
+const summaryCount = document.getElementById("summary-count");
 
 const PIX_DISCOUNT_PERCENT = 0.15;
 
@@ -70,6 +72,7 @@ function updateSummary() {
     summarySubtotal.textContent = "R$ 0,00";
     summaryDiscount.textContent = "R$ 0,00";
     summaryTotal.textContent = "R$ 0,00";
+    if (summaryCount) summaryCount.textContent = "0 itens";
     return;
   }
 
@@ -100,17 +103,34 @@ function updateSummary() {
 
   const subtotal = calcSubtotal();
   const discount = calcDiscount(subtotal);
+  const total = Math.max(subtotal - discount, 0);
   summarySubtotal.textContent = `R$ ${formatPrice(subtotal)}`;
-  summaryDiscount.textContent = discount
-    ? `-R$ ${formatPrice(discount)}`
-    : "R$ 0,00";
-  summaryTotal.textContent = `R$ ${formatPrice(subtotal - discount)}`;
+  summaryDiscount.textContent = `-R$ ${formatPrice(discount)}`;
+  summaryTotal.textContent = `R$ ${formatPrice(total)}`;
+  if (summaryCount) {
+    const countText = `${lines.length} ${lines.length === 1 ? "item" : "itens"}`;
+    summaryCount.textContent = countText;
+  }
+}
+
+function setSelectAllLabel(allSelected) {
+  if (!selectAllText) return;
+  selectAllText.textContent = allSelected ? "Desmarcar todos" : "Selecionar todos";
+}
+
+function syncSelectAllState() {
+  if (!selectAll) return;
+  const total = bumpMap.size;
+  const allSelected = total > 0 && selectedBumps.size === total;
+  selectAll.checked = allSelected;
+  setSelectAllLabel(allSelected);
 }
 
 function renderBumps(bumps = []) {
   bumpMap = new Map();
   selectedBumps.clear();
   selectAll.checked = false;
+  setSelectAllLabel(false);
 
   if (!bumps.length) {
     addonsSection.classList.add("hidden");
@@ -127,12 +147,17 @@ function renderBumps(bumps = []) {
       return `
         <label class="addon-card">
           <input type="checkbox" data-bump-id="${bump.id}" />
-          <div class="addon-card__media">
-            <img src="${image}" alt="${bump.name}" />
-          </div>
-          <div class="addon-card__body">
-            <p class="addon-card__title">${bump.name}</p>
-            <p class="addon-card__price">R$ ${formatPrice(bump.price_cents)}</p>
+          <div class="addon-card__content">
+            <span class="addon-card__tag">Oferta adicionada</span>
+            <div class="addon-card__info">
+              <div class="addon-card__media">
+                <img src="${image}" alt="${bump.name}" />
+              </div>
+              <div class="addon-card__body">
+                <p class="addon-card__title">${bump.name}</p>
+                <p class="addon-card__price">R$ ${formatPrice(bump.price_cents)}</p>
+              </div>
+            </div>
           </div>
         </label>
       `;
@@ -142,15 +167,15 @@ function renderBumps(bumps = []) {
   addonsList.querySelectorAll("input[data-bump-id]").forEach((input) => {
     input.addEventListener("change", () => {
       const id = input.getAttribute("data-bump-id");
+      const card = input.closest(".addon-card");
       if (input.checked) {
         selectedBumps.add(id);
+        card?.classList.add("addon-card--selected");
       } else {
         selectedBumps.delete(id);
+        card?.classList.remove("addon-card--selected");
       }
-      const allChecked =
-        selectedBumps.size === Array.from(bumpMap.keys()).length &&
-        selectedBumps.size > 0;
-      selectAll.checked = allChecked;
+      syncSelectAllState();
       updateSummary();
     });
   });
@@ -164,12 +189,16 @@ if (selectAll) {
     addonsList.querySelectorAll("input[data-bump-id]").forEach((input) => {
       input.checked = shouldSelect;
       const id = input.getAttribute("data-bump-id");
+      const card = input.closest(".addon-card");
       if (shouldSelect) {
         selectedBumps.add(id);
+        card?.classList.add("addon-card--selected");
       } else {
         selectedBumps.delete(id);
+        card?.classList.remove("addon-card--selected");
       }
     });
+    setSelectAllLabel(shouldSelect);
     updateSummary();
   });
 }

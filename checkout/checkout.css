@@ -191,40 +191,15 @@ body {
   font-size: 15px;
 }
 
-.info-banner {
-  border-radius: 18px;
-  border: 1px solid #e7ecfb;
-  background: #f7f8ff;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.info-banner strong {
-  color: #1c1d2b;
-}
-
-.info-banner .pill {
-  align-self: flex-start;
-  background: var(--pill);
-  color: var(--warning);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .addons {
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: #fff7d7;
-  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid #f3dba2;
+  background: linear-gradient(180deg, #fff8d9 0%, #fff2c1 100%);
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .addons.hidden {
@@ -242,6 +217,7 @@ body {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
+  color: #a27b15;
 }
 
 .select-all {
@@ -250,6 +226,11 @@ body {
   gap: 6px;
   font-size: 13px;
   color: var(--muted);
+  font-weight: 600;
+}
+
+.select-all input {
+  accent-color: #111;
 }
 
 .addons__list {
@@ -261,10 +242,38 @@ body {
 .addon-card {
   display: flex;
   gap: 12px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  background: #fff9d2;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fffef7;
+  align-items: flex-start;
+  transition: background 0.25s, border 0.25s, box-shadow 0.25s;
+}
+
+.addon-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.addon-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  color: #10783e;
+  background: #e0f7e8;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.addon-card__info {
+  display: flex;
+  gap: 12px;
   align-items: center;
 }
 
@@ -297,24 +306,59 @@ body {
 .addon-card__price {
   margin: 0;
   color: var(--warning);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .addon-card input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: #f3b128;
-  margin: 0 4px 0 0;
+  accent-color: #10a343;
+  margin-top: 6px;
+}
+
+.addon-card--selected {
+  background: #e3fce6;
+  border-color: #9bd9a5;
+  box-shadow: 0 16px 30px rgba(16, 163, 67, 0.18);
+}
+
+.addon-card--selected .addon-card__price {
+  color: #0b7a32;
+}
+
+.addon-card--selected .addon-card__tag {
+  opacity: 1;
 }
 
 .summary {
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 16px;
-  background: #f3f5fd;
+  border: 1px solid #dde1ed;
+  border-radius: 24px;
+  padding: 20px;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.summary__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary__header h3 {
+  margin: 0;
+}
+
+.summary__count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #f5f6fb;
+  border-radius: 999px;
+  padding: 4px 12px;
 }
 
 .summary__lines {

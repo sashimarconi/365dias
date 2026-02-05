@@ -73,12 +73,6 @@
             </div>
           </div>
 
-          <div class="info-banner">
-            <strong>Pagamento rápido e direto</strong>
-            <p>Finalize sua compra via Pix em segundos com total segurança e confirmação imediata.</p>
-            <span class="pill">15% OFF exclusivo via Pix</span>
-          </div>
-
           <section id="addons-section" class="addons hidden">
             <header class="addons__header">
               <div>
@@ -86,14 +80,17 @@
               </div>
               <label class="select-all">
                 <input type="checkbox" id="select-all" />
-                <span>Selecionar todos</span>
+                <span id="select-all-text">Selecionar todos</span>
               </label>
             </header>
             <div id="addons-list" class="addons__list"></div>
           </section>
 
           <section class="summary">
-            <h3>Resumo</h3>
+            <header class="summary__header">
+              <h3>Resumo</h3>
+              <span id="summary-count" class="summary__count">0 itens</span>
+            </header>
             <div id="summary-lines" class="summary__lines"></div>
             <div class="summary__line">
               <span>Subtotal</span>
