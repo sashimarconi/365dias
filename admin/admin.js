@@ -35,13 +35,17 @@ async function login() {
 
 function showPanel() {
   loginSection.classList.add("hidden");
+  loginSection.hidden = true;
   panelSection.classList.remove("hidden");
+  panelSection.hidden = false;
   loadItems();
 }
 
 function showLogin() {
   loginSection.classList.remove("hidden");
+  loginSection.hidden = false;
   panelSection.classList.add("hidden");
+  panelSection.hidden = true;
 }
 
 async function loadItems() {
@@ -165,5 +169,7 @@ logoutBtn.addEventListener("click", () => {
 });
 
 if (token) {
-  showPanel();
+  loadItems();
+} else {
+  showLogin();
 }
