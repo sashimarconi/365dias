@@ -18144,12 +18144,12 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                             v.jsx("span", {
                               className:
                                 "font-display text-6xl lg:text-7xl font-bold text-foreground",
-                              children: "82",
+                              children: "29",
                             }),
                             v.jsx("span", {
                               className:
                                 "font-display text-3xl font-bold text-foreground",
-                              children: ",70",
+                              children: ",90",
                             }),
                           ],
                         }),
