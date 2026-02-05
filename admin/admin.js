@@ -1,5 +1,6 @@
 const loginSection = document.getElementById("login");
 const panelSection = document.getElementById("panel");
+const loginForm = document.getElementById("login-form");
 const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const passwordInput = document.getElementById("password");
@@ -162,6 +163,10 @@ newItemForm.addEventListener("submit", async (event) => {
 });
 
 loginBtn.addEventListener("click", login);
+loginForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  login();
+});
 logoutBtn.addEventListener("click", () => {
   token = "";
   localStorage.removeItem("admin_token");

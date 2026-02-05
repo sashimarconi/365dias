@@ -21,12 +21,14 @@
     <main class="page">
       <section id="login" class="card">
         <h1>Admin</h1>
-        <label>
-          Senha
-          <input id="password" type="password" />
-        </label>
-        <button id="login-btn">Entrar</button>
-        <p id="login-error" class="error"></p>
+        <form id="login-form" class="form">
+          <label>
+            Senha
+            <input id="password" type="password" />
+          </label>
+          <button id="login-btn" type="submit">Entrar</button>
+          <p id="login-error" class="error"></p>
+        </form>
       </section>
 
       <section id="panel" class="card hidden" hidden>
