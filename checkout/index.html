@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout Pix</title>
+    <link rel="stylesheet" href="checkout.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card">
+        <header class="card__header">
+          <h1>Checkout Pix</h1>
+          <p>Pagamento rapido e seguro.</p>
+        </header>
+
+        <div id="offer" class="offer"></div>
+
+        <form id="checkout-form" class="form">
+          <h2>Seus dados</h2>
+          <label>
+            Nome completo
+            <input type="text" name="name" required />
+          </label>
+          <label>
+            E-mail
+            <input type="email" name="email" required />
+          </label>
+          <label>
+            Celular
+            <input type="tel" name="cellphone" />
+          </label>
+          <label>
+            CPF
+            <input type="text" name="taxId" />
+          </label>
+
+          <button id="pay-btn" type="submit">Gerar Pix</button>
+        </form>
+
+        <section id="pix-result" class="pix hidden">
+          <h2>Pix gerado</h2>
+          <img id="pix-qr" alt="QR Code Pix" />
+          <textarea id="pix-code" readonly></textarea>
+          <button id="copy-btn" type="button">Copiar codigo</button>
+        </section>
+      </section>
+    </main>
+
+    <script src="checkout.js"></script>
+  </body>
+</html>
