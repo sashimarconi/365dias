@@ -1,4 +1,4 @@
-const { supabase } = require("../lib/supabase");
+const { query } = require("../lib/db");
 const { requireAuth } = require("../lib/auth");
 const { parseJson } = require("../lib/parse-json");
 
@@ -8,19 +8,14 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === "GET") {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("type", { ascending: true })
-      .order("sort", { ascending: true })
-      .order("created_at", { ascending: true });
-
-    if (error) {
+    try {
+      const result = await query(
+        "select * from products order by type asc, sort asc, created_at asc"
+      );
+      res.json({ items: result.rows || [] });
+    } catch (error) {
       res.status(500).json({ error: error.message });
-      return;
     }
-
-    res.json({ items: data || [] });
     return;
   }
 
@@ -41,18 +36,23 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("products")
-      .insert(item)
-      .select("*")
-      .single();
-
-    if (error) {
+    try {
+      const result = await query(
+        "insert into products (type, name, description, price_cents, active, sort, image_url) values ($1, $2, $3, $4, $5, $6, $7) returning *",
+        [
+          item.type,
+          item.name,
+          item.description,
+          item.price_cents,
+          item.active,
+          item.sort,
+          item.image_url,
+        ]
+      );
+      res.json({ item: result.rows[0] });
+    } catch (error) {
       res.status(500).json({ error: error.message });
-      return;
     }
-
-    res.json({ item: data });
     return;
   }
 

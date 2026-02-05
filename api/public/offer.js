@@ -1,4 +1,4 @@
-const { supabase } = require("../lib/supabase");
+const { query } = require("../lib/db");
 
 module.exports = async (req, res) => {
   if (req.method !== "GET") {
@@ -6,44 +6,26 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const baseRes = await supabase
-    .from("products")
-    .select("*")
-    .eq("type", "base")
-    .eq("active", true)
-    .order("sort", { ascending: true })
-    .order("created_at", { ascending: true })
-    .limit(1);
+  try {
+    const baseRes = await query(
+      "select * from products where type = $1 and active = true order by sort asc, created_at asc limit 1",
+      ["base"]
+    );
+    const bumpRes = await query(
+      "select * from products where type = $1 and active = true order by sort asc, created_at asc",
+      ["bump"]
+    );
+    const upsellRes = await query(
+      "select * from products where type = $1 and active = true order by sort asc, created_at asc",
+      ["upsell"]
+    );
 
-  const bumpRes = await supabase
-    .from("products")
-    .select("*")
-    .eq("type", "bump")
-    .eq("active", true)
-    .order("sort", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  const upsellRes = await supabase
-    .from("products")
-    .select("*")
-    .eq("type", "upsell")
-    .eq("active", true)
-    .order("sort", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (baseRes.error || bumpRes.error || upsellRes.error) {
-    res.status(500).json({
-      error:
-        baseRes.error?.message ||
-        bumpRes.error?.message ||
-        upsellRes.error?.message,
+    res.json({
+      base: baseRes.rows?.[0] || null,
+      bumps: bumpRes.rows || [],
+      upsells: upsellRes.rows || [],
     });
-    return;
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  res.json({
-    base: baseRes.data?.[0] || null,
-    bumps: bumpRes.data || [],
-    upsells: upsellRes.data || [],
-  });
 };

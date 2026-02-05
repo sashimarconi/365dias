@@ -1,4 +1,4 @@
-const { supabase } = require("../../lib/supabase");
+const { query } = require("../../lib/db");
 const { requireAuth } = require("../../lib/auth");
 const { parseJson } = require("../../lib/parse-json");
 
@@ -25,29 +25,34 @@ module.exports = async (req, res) => {
       image_url: body.image_url || "",
     };
 
-    const { data, error } = await supabase
-      .from("products")
-      .update(updates)
-      .eq("id", id)
-      .select("*")
-      .single();
-
-    if (error) {
+    try {
+      const result = await query(
+        "update products set type = $1, name = $2, description = $3, price_cents = $4, active = $5, sort = $6, image_url = $7 where id = $8 returning *",
+        [
+          updates.type,
+          updates.name,
+          updates.description,
+          updates.price_cents,
+          updates.active,
+          updates.sort,
+          updates.image_url,
+          id,
+        ]
+      );
+      res.json({ item: result.rows[0] });
+    } catch (error) {
       res.status(500).json({ error: error.message });
-      return;
     }
-
-    res.json({ item: data });
     return;
   }
 
   if (req.method === "DELETE") {
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) {
+    try {
+      await query("delete from products where id = $1", [id]);
+      res.json({ ok: true });
+    } catch (error) {
       res.status(500).json({ error: error.message });
-      return;
     }
-    res.json({ ok: true });
     return;
   }
 
