@@ -18136,7 +18136,7 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                                 "px-3 py-1 rounded-full text-sm font-medium",
                               style: {
                                 backgroundColor: "hsl(0 70% 90% / .7)",
-                                color: "hsl(0 70% 45%)",
+                                color: "#000",
                               },
                               children: "-64% OFF",
                             }),
@@ -18148,16 +18148,19 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                             v.jsx("span", {
                               className:
                                 "font-body text-2xl text-red-600",
+                              style: { color: "#dc2626" },
                               children: "R$",
                             }),
                             v.jsx("span", {
                               className:
                                 "font-display text-6xl lg:text-7xl font-bold text-red-600",
+                              style: { color: "#dc2626" },
                               children: "29",
                             }),
                             v.jsx("span", {
                               className:
                                 "font-display text-3xl font-bold text-red-600",
+                              style: { color: "#dc2626" },
                               children: ",90",
                             }),
                           ],
