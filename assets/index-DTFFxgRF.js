@@ -18113,7 +18113,7 @@ const yE = "/assets/book-cover-C54a7VeN.png",
                   children: [
                     v.jsxs("div", {
                       className:
-                        "text-center mb-8 bg-cream-dark/60 border border-gold/30 rounded-2xl p-6",
+                        "text-center mb-8 bg-olive/10 border border-olive/20 rounded-2xl p-6 shadow-card",
                       children: [
                         v.jsxs("div", {
                           className:
