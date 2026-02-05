@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="checkout.css" />
+    <link rel="stylesheet" href="/checkout/checkout.css" />
   </head>
   <body>
     <main class="page">
@@ -50,21 +50,9 @@
         <hr class="divider" />
 
         <form id="checkout-form" class="form">
-          <div class="form__group">
-            <div class="field">
-              <label for="email">Seu e-mail</label>
-              <input id="email" type="email" name="email" required placeholder="Insira seu e-mail" />
-            </div>
-            <div class="field">
-              <label for="email-confirm">Confirme seu e-mail</label>
-              <input
-                id="email-confirm"
-                type="email"
-                name="email_confirm"
-                required
-                placeholder="Insira novamente seu e-mail"
-              />
-            </div>
+          <div class="field">
+            <label for="email">Seu e-mail</label>
+            <input id="email" type="email" name="email" required placeholder="Insira seu e-mail" />
           </div>
 
           <div class="field">
@@ -85,20 +73,10 @@
             </div>
           </div>
 
-          <div class="payment">
-            <div class="payment__options">
-              <button type="button" class="payment-option" data-method="credit" data-disabled="true">
-                <span>Cartão de crédito</span>
-              </button>
-              <button type="button" class="payment-option is-active" data-method="pix">
-                <span>Pix</span>
-                <span class="pill" id="pix-discount-pill">15% OFF</span>
-              </button>
-            </div>
-            <div class="payment__note">
-              <strong>Pagamento rápido e direto</strong>
-              <p>Finalize sua compra em segundos com total segurança e confirmação imediata.</p>
-            </div>
+          <div class="info-banner">
+            <strong>Pagamento rápido e direto</strong>
+            <p>Finalize sua compra via Pix em segundos com total segurança e confirmação imediata.</p>
+            <span class="pill">15% OFF exclusivo via Pix</span>
           </div>
 
           <section id="addons-section" class="addons hidden">
@@ -152,6 +130,6 @@
       </section>
     </main>
 
-    <script src="checkout.js"></script>
+    <script src="/checkout/checkout.js"></script>
   </body>
 </html>

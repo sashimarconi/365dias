@@ -15,19 +15,12 @@ const summaryLines = document.getElementById("summary-lines");
 const summarySubtotal = document.getElementById("summary-subtotal");
 const summaryDiscount = document.getElementById("summary-discount");
 const summaryTotal = document.getElementById("summary-total");
-const paymentButtons = document.querySelectorAll(".payment-option");
-const pixDiscountPill = document.getElementById("pix-discount-pill");
 
 const PIX_DISCOUNT_PERCENT = 0.15;
-
-if (pixDiscountPill) {
-  pixDiscountPill.textContent = `${Math.round(PIX_DISCOUNT_PERCENT * 100)}% OFF`;
-}
 
 let offerData = null;
 let selectedBumps = new Set();
 let bumpMap = new Map();
-let paymentMethod = "pix";
 
 function formatPrice(cents) {
   return (cents / 100).toFixed(2).replace(".", ",");
@@ -62,9 +55,6 @@ function calcSubtotal() {
 }
 
 function calcDiscount(subtotal) {
-  if (paymentMethod !== "pix") {
-    return 0;
-  }
   return Math.floor(subtotal * PIX_DISCOUNT_PERCENT);
 }
 
@@ -184,23 +174,6 @@ if (selectAll) {
   });
 }
 
-paymentButtons.forEach((button) => {
-  const method = button.getAttribute("data-method");
-  if (button.dataset.disabled === "true") {
-    button.addEventListener("click", () => {
-      alert("Cartão de crédito disponível em breve. Use Pix e ganhe 15% OFF.");
-    });
-    return;
-  }
-
-  button.addEventListener("click", () => {
-    paymentMethod = method;
-    paymentButtons.forEach((btn) => btn.classList.remove("is-active"));
-    button.classList.add("is-active");
-    updateSummary();
-  });
-});
-
 async function loadOffer() {
   const res = await fetch("/api/public/offer");
   const data = await res.json();
@@ -231,19 +204,8 @@ form.addEventListener("submit", async (event) => {
   if (!offerData?.base) {
     return;
   }
-
-  if (paymentMethod !== "pix") {
-    alert("Por enquanto estamos processando apenas via Pix.");
-    return;
-  }
-
   const formData = new FormData(form);
   const email = formData.get("email");
-  const emailConfirm = formData.get("email_confirm");
-  if (email && emailConfirm && email !== emailConfirm) {
-    alert("Os e-mails digitados não conferem.");
-    return;
-  }
 
   payBtn.disabled = true;
   const originalText = payBtn.textContent;
