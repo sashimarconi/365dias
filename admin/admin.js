@@ -8,6 +8,7 @@ const loginError = document.getElementById("login-error");
 const newItemForm = document.getElementById("new-item");
 const itemsContainer = document.getElementById("items");
 const panelTabs = document.querySelectorAll(".panel-tab");
+const panelViews = document.querySelectorAll(".panel-view");
 const statsUpdated = document.getElementById("stats-updated");
 const timelineBody = document.getElementById("timeline-body");
 const statElements = {
@@ -31,12 +32,42 @@ const funnelBars = {
   starts: document.getElementById("funnel-starts-bar"),
   purchases: document.getElementById("funnel-purchases-bar"),
 };
+const ordersStatsElements = {
+  total: document.getElementById("orders-total"),
+  pending: document.getElementById("orders-pending"),
+  paid: document.getElementById("orders-paid"),
+  amount: document.getElementById("orders-amount"),
+};
+const cartsStatsElements = {
+  total: document.getElementById("carts-total"),
+  open: document.getElementById("carts-open"),
+  converted: document.getElementById("carts-converted"),
+  value: document.getElementById("carts-value"),
+};
+const ordersTableBody = document.getElementById("orders-table-body");
+const cartsTableBody = document.getElementById("carts-table-body");
+const ordersRefreshBtn = document.getElementById("orders-refresh");
+const cartsRefreshBtn = document.getElementById("carts-refresh");
+const inspector = document.getElementById("inspector");
+const inspectorType = document.getElementById("inspector-type");
+const inspectorTitle = document.getElementById("inspector-title");
+const inspectorBody = document.getElementById("inspector-body");
+const inspectorClose = document.getElementById("inspector-close");
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const percentFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: 2,
+});
 const DASHBOARD_INTERVAL = 15000;
+const ORDERS_INTERVAL = 20000;
+const CARTS_INTERVAL = 20000;
 
 let token = localStorage.getItem("admin_token") || "";
 let summaryInterval = null;
+let ordersInterval = null;
+let cartsInterval = null;
 
 function setAuthHeader() {
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -68,6 +99,7 @@ function showPanel() {
   panelSection.classList.remove("hidden");
   panelSection.hidden = false;
   startSummaryPolling();
+  activateView("dashboard-view");
   loadItems();
 }
 
@@ -77,6 +109,9 @@ function showLogin() {
   panelSection.classList.add("hidden");
   panelSection.hidden = true;
   stopSummaryPolling();
+  stopOrdersPolling();
+  stopCartsPolling();
+  closeInspector();
 }
 
 function startSummaryPolling() {
@@ -198,6 +233,280 @@ function renderTimeline(rows) {
   timelineBody.innerHTML = html;
 }
 
+function renderTableMessage(tbody, columns, message) {
+  if (!tbody) {
+    return;
+  }
+  tbody.innerHTML = `<tr><td colspan="${columns}">${message}</td></tr>`;
+}
+
+function formatCurrency(value) {
+  const cents = Number(value || 0);
+  return currencyFormatter.format(cents / 100);
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "--";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "--";
+  }
+  return date.toLocaleString("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
+function mapOrderStatus(status) {
+  const normalized = (status || "").toLowerCase();
+  if (normalized === "paid") {
+    return { label: "Pago", tone: "paid" };
+  }
+  if (normalized === "failed") {
+    return { label: "Falhou", tone: "pending" };
+  }
+  return { label: "Pendente", tone: "pending" };
+}
+
+function mapCartStatus(status) {
+  const normalized = (status || "").toLowerCase();
+  if (normalized === "converted") {
+    return { label: "Convertido", tone: "converted" };
+  }
+  if (normalized === "expired") {
+    return { label: "Expirado", tone: "pending" };
+  }
+  return { label: "Aberto", tone: "open" };
+}
+
+function formatStageLabel(stage) {
+  const normalized = (stage || "").toLowerCase();
+  if (normalized === "address") return "Endereço";
+  if (normalized === "payment") return "Pagamento";
+  return "Contato";
+}
+
+function createStatusPill(config) {
+  const span = document.createElement("span");
+  span.className = `status-pill status-pill--${config.tone}`;
+  span.textContent = config.label;
+  return span;
+}
+
+function renderOrdersStats(stats = {}) {
+  if (!ordersStatsElements.total) {
+    return;
+  }
+  ordersStatsElements.total.textContent = formatNumber(Number(stats.total) || 0);
+  ordersStatsElements.pending.textContent = formatNumber(Number(stats.pending) || 0);
+  ordersStatsElements.paid.textContent = formatNumber(Number(stats.paid) || 0);
+  ordersStatsElements.amount.textContent = formatCurrency(stats.total_amount);
+}
+
+function renderCartsStats(stats = {}) {
+  if (!cartsStatsElements.total) {
+    return;
+  }
+  cartsStatsElements.total.textContent = formatNumber(Number(stats.total) || 0);
+  cartsStatsElements.open.textContent = formatNumber(Number(stats.open) || 0);
+  cartsStatsElements.converted.textContent = formatNumber(Number(stats.converted) || 0);
+  cartsStatsElements.value.textContent = formatCurrency(stats.total_value);
+}
+
+function renderOrdersTable(orders = []) {
+  if (!ordersTableBody) {
+    return;
+  }
+  if (!orders.length) {
+    renderTableMessage(ordersTableBody, 5, "Nenhum pedido por enquanto.");
+    return;
+  }
+  ordersTableBody.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+  orders.forEach((order) => {
+    const tr = document.createElement("tr");
+    tr.dataset.orderId = order.id;
+
+    const customerCell = document.createElement("td");
+    const customerStack = document.createElement("div");
+    customerStack.className = "cell-stack";
+    const customerName = document.createElement("strong");
+    customerName.textContent = order.customer?.name || "Cliente";
+    const customerEmail = document.createElement("small");
+    customerEmail.textContent = order.customer?.email || "--";
+    customerStack.append(customerName, customerEmail);
+    customerCell.appendChild(customerStack);
+
+    const valueCell = document.createElement("td");
+    valueCell.textContent = formatCurrency(order.total_cents ?? order.summary?.total_cents ?? 0);
+
+    const statusCell = document.createElement("td");
+    statusCell.appendChild(createStatusPill(mapOrderStatus(order.status)));
+
+    const pixCell = document.createElement("td");
+    pixCell.textContent = order.pix?.txid || "--";
+
+    const createdCell = document.createElement("td");
+    createdCell.textContent = formatDateTime(order.created_at);
+
+    tr.append(customerCell, valueCell, statusCell, pixCell, createdCell);
+    fragment.appendChild(tr);
+  });
+  ordersTableBody.appendChild(fragment);
+}
+
+function renderCartsTable(carts = []) {
+  if (!cartsTableBody) {
+    return;
+  }
+  if (!carts.length) {
+    renderTableMessage(cartsTableBody, 6, "Nenhum carrinho capturado ainda.");
+    return;
+  }
+  cartsTableBody.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+  carts.forEach((cart) => {
+    const tr = document.createElement("tr");
+    tr.dataset.cartId = cart.id;
+
+    const customerCell = document.createElement("td");
+    const stack = document.createElement("div");
+    stack.className = "cell-stack";
+    const name = document.createElement("strong");
+    name.textContent = cart.customer?.name || "Lead";
+    const email = document.createElement("small");
+    email.textContent = cart.customer?.email || "--";
+    stack.append(name, email);
+    customerCell.appendChild(stack);
+
+    const stageCell = document.createElement("td");
+    stageCell.textContent = formatStageLabel(cart.stage);
+
+    const statusCell = document.createElement("td");
+    statusCell.appendChild(createStatusPill(mapCartStatus(cart.status)));
+
+    const totalCell = document.createElement("td");
+    totalCell.textContent = formatCurrency(cart.total_cents ?? cart.summary?.total_cents ?? 0);
+
+    const seenCell = document.createElement("td");
+    seenCell.textContent = formatDateTime(cart.last_seen);
+
+    const createdCell = document.createElement("td");
+    createdCell.textContent = formatDateTime(cart.created_at);
+
+    tr.append(customerCell, stageCell, statusCell, totalCell, seenCell, createdCell);
+    fragment.appendChild(tr);
+  });
+  cartsTableBody.appendChild(fragment);
+}
+
+function startOrdersPolling() {
+  if (ordersInterval) {
+    return;
+  }
+  loadOrders();
+  ordersInterval = setInterval(loadOrders, ORDERS_INTERVAL);
+}
+
+function stopOrdersPolling() {
+  if (ordersInterval) {
+    clearInterval(ordersInterval);
+    ordersInterval = null;
+  }
+}
+
+function startCartsPolling() {
+  if (cartsInterval) {
+    return;
+  }
+  loadCarts();
+  cartsInterval = setInterval(loadCarts, CARTS_INTERVAL);
+}
+
+function stopCartsPolling() {
+  if (cartsInterval) {
+    clearInterval(cartsInterval);
+    cartsInterval = null;
+  }
+}
+
+async function loadOrders() {
+  if (!ordersTableBody) {
+    return;
+  }
+  try {
+    const res = await fetch("/api/admin/orders", {
+      headers: { ...setAuthHeader() },
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        showLogin();
+      }
+      renderTableMessage(ordersTableBody, 5, "Não foi possível carregar os pedidos.");
+      return;
+    }
+    const data = await res.json();
+    renderOrdersStats(data.stats || {});
+    renderOrdersTable(data.orders || []);
+  } catch (error) {
+    renderTableMessage(ordersTableBody, 5, "Erro ao carregar pedidos.");
+  }
+}
+
+async function loadCarts() {
+  if (!cartsTableBody) {
+    return;
+  }
+  try {
+    const res = await fetch("/api/admin/carts", {
+      headers: { ...setAuthHeader() },
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        showLogin();
+      }
+      renderTableMessage(cartsTableBody, 6, "Não foi possível carregar os carrinhos.");
+      return;
+    }
+    const data = await res.json();
+    renderCartsStats(data.stats || {});
+    renderCartsTable(data.carts || []);
+  } catch (error) {
+    renderTableMessage(cartsTableBody, 6, "Erro ao carregar carrinhos.");
+  }
+}
+
+function activateView(targetId) {
+  if (!targetId) {
+    return;
+  }
+  panelTabs.forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.target === targetId);
+  });
+  panelViews.forEach((section) => {
+    const isTarget = section.id === targetId;
+    section.classList.toggle("hidden", !isTarget);
+    section.hidden = !isTarget;
+  });
+
+  if (targetId === "orders-view") {
+    startOrdersPolling();
+    stopCartsPolling();
+  } else if (targetId === "carts-view") {
+    startCartsPolling();
+    stopOrdersPolling();
+  } else {
+    stopOrdersPolling();
+    stopCartsPolling();
+  }
+
+  if (targetId === "products-view") {
+    loadItems();
+  }
+}
+
 function renderItems(items) {
   itemsContainer.innerHTML = "";
   items.forEach((item) => {
@@ -287,6 +596,228 @@ async function deleteItem(id) {
   loadItems();
 }
 
+function closeInspector() {
+  if (!inspector) {
+    return;
+  }
+  inspector.classList.add("hidden");
+  inspector.hidden = true;
+}
+
+async function openInspector(type, id) {
+  if (!inspector || !id) {
+    return;
+  }
+  inspector.classList.remove("hidden");
+  inspector.hidden = false;
+  inspectorType.textContent = type === "order" ? `Pedido #${id}` : `Carrinho #${id}`;
+  inspectorTitle.textContent = "Carregando...";
+  inspectorBody.innerHTML = '<p class="muted">Buscando detalhes...</p>';
+
+  const endpoint = type === "order" ? `/api/admin/orders/${id}` : `/api/admin/carts/${id}`;
+  try {
+    const res = await fetch(endpoint, {
+      headers: { ...setAuthHeader() },
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        showLogin();
+        return;
+      }
+      inspectorBody.innerHTML = '<p class="muted">Não foi possível carregar os detalhes.</p>';
+      return;
+    }
+    const data = await res.json();
+    if (type === "order") {
+      renderInspectorOrder(data.order);
+    } else {
+      renderInspectorCart(data.cart);
+    }
+  } catch (error) {
+    inspectorBody.innerHTML = '<p class="muted">Erro ao consultar o servidor.</p>';
+  }
+}
+
+function renderInspectorOrder(order) {
+  if (!order) {
+    inspectorBody.innerHTML = '<p class="muted">Pedido não encontrado.</p>';
+    return;
+  }
+  inspectorType.textContent = `Pedido #${order.id}`;
+  inspectorTitle.textContent = order.customer?.name || "Cliente";
+  inspectorBody.innerHTML = "";
+
+  const summaryRows = [
+    ["Status", mapOrderStatus(order.status).label],
+    ["Valor total", formatCurrency(order.total_cents ?? order.summary?.total_cents ?? 0)],
+    ["Subtotal", formatCurrency(order.subtotal_cents ?? order.summary?.subtotal_cents ?? 0)],
+    ["Frete", formatCurrency(order.shipping_cents ?? order.summary?.shipping_cents ?? 0)],
+    ["Criado em", formatDateTime(order.created_at)],
+  ];
+  inspectorBody.appendChild(createDataSection("Resumo do pedido", summaryRows));
+
+  if (order.pix) {
+    const pixRows = [
+      ["TXID", order.pix.txid || "--"],
+      ["Expira", order.pix.expires_at ? formatDateTime(order.pix.expires_at) : "--"],
+    ];
+    inspectorBody.appendChild(createDataSection("Pix", pixRows));
+  }
+
+  if (order.customer) {
+    const customerRows = [
+      ["Nome", order.customer.name || "--"],
+      ["Email", order.customer.email || "--"],
+      ["Telefone", order.customer.cellphone || order.customer.phone || "--"],
+      ["Documento", order.customer.taxId || order.customer.tax_id || "--"],
+    ];
+    inspectorBody.appendChild(createDataSection("Cliente", customerRows));
+  }
+
+  const address = order.address || order.customer?.address;
+  if (address) {
+    const addressRows = [
+      ["Rua", address.street || "--"],
+      ["Número", address.number || address.address_number || "--"],
+      ["CEP", address.cep || "--"],
+      ["Cidade", address.city || "--"],
+      ["Estado", address.state || "--"],
+      ["Complemento", address.complement || "--"],
+    ];
+    inspectorBody.appendChild(createDataSection("Entrega", addressRows));
+  }
+
+  if (Array.isArray(order.items) && order.items.length) {
+    inspectorBody.appendChild(createItemsSection(order.items));
+  }
+
+  if (order.utm) {
+    const utmRows = buildKeyValueRows(order.utm);
+    if (utmRows.length) {
+      inspectorBody.appendChild(createDataSection("UTM", utmRows));
+    }
+  }
+
+  if (order.tracking?.src) {
+    inspectorBody.appendChild(
+      createDataSection("Origem", [["URL", order.tracking.src || "--"]])
+    );
+  }
+}
+
+function renderInspectorCart(cart) {
+  if (!cart) {
+    inspectorBody.innerHTML = '<p class="muted">Carrinho não encontrado.</p>';
+    return;
+  }
+  inspectorType.textContent = `Carrinho #${cart.id}`;
+  inspectorTitle.textContent = cart.customer?.name || cart.cart_key || "Carrinho";
+  inspectorBody.innerHTML = "";
+
+  const summaryRows = [
+    ["Status", mapCartStatus(cart.status).label],
+    ["Etapa", formatStageLabel(cart.stage)],
+    ["Valor", formatCurrency(cart.total_cents ?? cart.summary?.total_cents ?? 0)],
+    ["Último contato", formatDateTime(cart.last_seen)],
+    ["Criado em", formatDateTime(cart.created_at)],
+    ["Cart ID", cart.cart_key || "--"],
+  ];
+  inspectorBody.appendChild(createDataSection("Status do carrinho", summaryRows));
+
+  if (cart.customer) {
+    const customerRows = [
+      ["Nome", cart.customer.name || "--"],
+      ["Email", cart.customer.email || "--"],
+      ["Telefone", cart.customer.cellphone || cart.customer.phone || "--"],
+    ];
+    inspectorBody.appendChild(createDataSection("Lead", customerRows));
+  }
+
+  if (cart.address) {
+    const addressRows = [
+      ["Rua", cart.address.street || "--"],
+      ["Número", cart.address.number || cart.address.address_number || "--"],
+      ["CEP", cart.address.cep || "--"],
+      ["Cidade", cart.address.city || "--"],
+      ["Estado", cart.address.state || "--"],
+    ];
+    inspectorBody.appendChild(createDataSection("Endereço informado", addressRows));
+  }
+
+  if (Array.isArray(cart.items) && cart.items.length) {
+    inspectorBody.appendChild(createItemsSection(cart.items, "Itens do carrinho"));
+  }
+
+  if (cart.utm) {
+    const utmRows = buildKeyValueRows(cart.utm);
+    if (utmRows.length) {
+      inspectorBody.appendChild(createDataSection("UTM", utmRows));
+    }
+  }
+
+  if (cart.tracking?.src) {
+    inspectorBody.appendChild(
+      createDataSection("Origem", [["URL", cart.tracking.src || "--"]])
+    );
+  }
+}
+
+function createDataSection(title, rows = []) {
+  const section = document.createElement("section");
+  section.className = "data-section";
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  section.appendChild(heading);
+  if (rows.length) {
+    const list = document.createElement("ul");
+    list.className = "data-grid";
+    rows.forEach(([label, value]) => {
+      const li = document.createElement("li");
+      li.className = "data-grid__row";
+      const span = document.createElement("span");
+      span.textContent = label;
+      const strong = document.createElement("strong");
+      strong.textContent = value;
+      li.append(span, strong);
+      list.appendChild(li);
+    });
+    section.appendChild(list);
+  }
+  return section;
+}
+
+function createItemsSection(items, title = "Itens") {
+  const section = document.createElement("section");
+  section.className = "data-section";
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  section.appendChild(heading);
+  const list = document.createElement("ul");
+  list.className = "items-list";
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "items-list__item";
+    const name = document.createElement("strong");
+    name.textContent = item.name || "Item";
+    const meta = document.createElement("span");
+    const typeLabel = (item.type || "produto").toString().toUpperCase();
+    meta.textContent = `${typeLabel} • ${formatCurrency(item.price_cents ?? item.total_cents ?? 0)}`;
+    li.append(name, meta);
+    list.appendChild(li);
+  });
+  section.appendChild(list);
+  return section;
+}
+
+function buildKeyValueRows(obj) {
+  if (!obj || typeof obj !== "object") {
+    return [];
+  }
+  return Object.entries(obj)
+    .filter(([, value]) => value !== null && value !== undefined && value !== "")
+    .map(([key, value]) => [key.toUpperCase(), String(value)]);
+}
+
 newItemForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(newItemForm);
@@ -322,22 +853,49 @@ logoutBtn.addEventListener("click", () => {
   showLogin();
 });
 
+ordersRefreshBtn?.addEventListener("click", () => loadOrders());
+cartsRefreshBtn?.addEventListener("click", () => loadCarts());
+
+ordersTableBody?.addEventListener("click", (event) => {
+  const row = event.target.closest("tr[data-order-id]");
+  if (!row) {
+    return;
+  }
+  openInspector("order", row.dataset.orderId);
+});
+
+cartsTableBody?.addEventListener("click", (event) => {
+  const row = event.target.closest("tr[data-cart-id]");
+  if (!row) {
+    return;
+  }
+  openInspector("cart", row.dataset.cartId);
+});
+
+inspectorClose?.addEventListener("click", closeInspector);
+inspector?.addEventListener("click", (event) => {
+  if (event.target === inspector) {
+    closeInspector();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeInspector();
+  }
+});
+
 panelTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     if (tab.classList.contains("is-active")) {
       return;
     }
-    panelTabs.forEach((btn) => btn.classList.remove("is-active"));
-    tab.classList.add("is-active");
-    const targetId = tab.dataset.target;
-    document.querySelectorAll(".panel-view").forEach((section) => {
-      section.classList.toggle("hidden", section.id !== targetId);
-    });
+    activateView(tab.dataset.target);
   });
 });
 
 if (token) {
-  loadItems();
+  showPanel();
 } else {
   showLogin();
 }

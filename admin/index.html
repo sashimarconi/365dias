@@ -42,6 +42,12 @@
               <button type="button" class="panel-tab is-active" data-target="dashboard-view">
                 Dashboard
               </button>
+              <button type="button" class="panel-tab" data-target="orders-view">
+                Pedidos
+              </button>
+              <button type="button" class="panel-tab" data-target="carts-view">
+                Carrinhos
+              </button>
               <button type="button" class="panel-tab" data-target="products-view">
                 Produtos
               </button>
@@ -160,6 +166,121 @@
           </section>
         </section>
 
+        <section id="orders-view" class="panel-view hidden" hidden>
+          <header class="view-header">
+            <div>
+              <h2>Pedidos</h2>
+              <p>Acompanhe os Pix gerados e o status financeiro de cada pedido.</p>
+            </div>
+            <div class="view-header__actions">
+              <button id="orders-refresh" type="button" class="ghost">Atualizar</button>
+            </div>
+          </header>
+          <div class="stats-grid stats-grid--compact">
+            <article class="stat-card">
+              <p>Pedidos totais</p>
+              <strong id="orders-total">0</strong>
+            </article>
+            <article class="stat-card">
+              <p>Pix pendentes</p>
+              <strong id="orders-pending">0</strong>
+            </article>
+            <article class="stat-card">
+              <p>Pix compensados</p>
+              <strong id="orders-paid">0</strong>
+            </article>
+            <article class="stat-card stat-card--accent">
+              <p>Faturamento potencial</p>
+              <strong id="orders-amount">R$ 0,00</strong>
+              <small>Total bruto registrado</small>
+            </article>
+          </div>
+          <section class="table-card">
+            <header>
+              <div>
+                <h3>Últimos pedidos</h3>
+                <p>Mostrando até 150 registros</p>
+              </div>
+            </header>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Pix</th>
+                    <th>Criado em</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-table-body">
+                  <tr>
+                    <td colspan="5">Carregando pedidos...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section id="carts-view" class="panel-view hidden" hidden>
+          <header class="view-header">
+            <div>
+              <h2>Carrinhos abandonados</h2>
+              <p>Veja em que etapa os leads pararam e recupere oportunidades.</p>
+            </div>
+            <div class="view-header__actions">
+              <button id="carts-refresh" type="button" class="ghost">Atualizar</button>
+            </div>
+          </header>
+          <div class="stats-grid stats-grid--compact">
+            <article class="stat-card">
+              <p>Total capturado</p>
+              <strong id="carts-total">0</strong>
+            </article>
+            <article class="stat-card">
+              <p>Abertos</p>
+              <strong id="carts-open">0</strong>
+            </article>
+            <article class="stat-card">
+              <p>Convertidos</p>
+              <strong id="carts-converted">0</strong>
+            </article>
+            <article class="stat-card stat-card--accent">
+              <p>Valor em jogo</p>
+              <strong id="carts-value">R$ 0,00</strong>
+              <small>Soma dos carrinhos</small>
+            </article>
+          </div>
+          <section class="table-card">
+            <header>
+              <div>
+                <h3>Últimas interações</h3>
+                <p>Ordenado pelo último contato</p>
+              </div>
+            </header>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Etapa</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                    <th>Último contato</th>
+                    <th>Criado em</th>
+                  </tr>
+                </thead>
+                <tbody id="carts-table-body">
+                  <tr>
+                    <td colspan="6">Carregando carrinhos...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
         <section id="products-view" class="panel-view hidden">
           <form id="new-item" class="form">
             <h2>Novo item</h2>
@@ -210,6 +331,21 @@
         </section>
       </section>
     </main>
+
+    <aside id="inspector" class="inspector hidden" hidden role="dialog" aria-modal="true">
+      <div class="inspector__panel">
+        <header class="inspector__header">
+          <div>
+            <p id="inspector-type" class="inspector__eyebrow">Detalhes</p>
+            <h3 id="inspector-title">Selecione um registro</h3>
+          </div>
+          <button id="inspector-close" type="button" class="ghost">Fechar</button>
+        </header>
+        <div id="inspector-body" class="inspector__body">
+          <p class="muted">Escolha um pedido ou carrinho para ver as informações completas.</p>
+        </div>
+      </div>
+    </aside>
 
     <script src="/admin/admin.js"></script>
   </body>

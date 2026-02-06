@@ -40,7 +40,6 @@ const contactInputs = [
 const shippingSection = document.getElementById("shipping-section");
 const shippingList = document.getElementById("shipping-list");
 const CPF_FALLBACK = "25335818875";
-const analytics = window.LiveAnalytics || null;
 
 let offerData = null;
 let selectedBumps = new Set();
@@ -49,6 +48,33 @@ let shippingOptions = [];
 let selectedShippingId = null;
 let addressOpen = false;
 let manualAddressMode = false;
+const CART_STAGE_PRIORITY = { contact: 1, address: 2, payment: 3 };
+const CART_STORAGE_KEY = "checkout_cart_id";
+let cartId = initCartId();
+let cartStageLevel = 0;
+let cartSyncTimeout = null;
+let lastCartPayloadSignature = "";
+
+function initCartId() {
+  const nextId = () => {
+    if (window.crypto?.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    return `cart_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  };
+
+  try {
+    const stored = window.localStorage?.getItem(CART_STORAGE_KEY);
+    if (stored) {
+      return stored;
+    }
+    const fresh = nextId();
+    window.localStorage?.setItem(CART_STORAGE_KEY, fresh);
+    return fresh;
+  } catch (error) {
+    return nextId();
+  }
+}
 
 function formatPrice(cents) {
   return (cents / 100).toFixed(2).replace(".", ",");
@@ -97,11 +123,219 @@ function calcTotal() {
 }
 
 function trackCheckout(event, metadata = {}) {
-  if (!analytics) return;
-  analytics.sendEvent(event, {
+  const tracker = window.LiveAnalytics;
+  if (!tracker) return;
+  tracker.sendEvent(event, {
     page: "checkout",
     metadata,
   });
+}
+
+function getFieldValue(name) {
+  if (!form || !name) return "";
+  const field = form.elements?.namedItem(name);
+  if (!field) return "";
+  if (typeof field.value === "string") {
+    return field.value.trim();
+  }
+  if (typeof RadioNodeList !== "undefined" && field instanceof RadioNodeList) {
+    return (field.value || "").trim();
+  }
+  return "";
+}
+
+function getCustomerData() {
+  const name = getFieldValue("name");
+  const email = getFieldValue("email");
+  const cellphone = getFieldValue("cellphone");
+  const taxId = getFieldValue("taxId");
+  if (!name && !email && !cellphone && !taxId) {
+    return null;
+  }
+  const customer = { name, email, cellphone, taxId };
+  const address = getAddressData();
+  if (address) {
+    customer.address = address;
+  }
+  return customer;
+}
+
+function getAddressData() {
+  const values = {
+    cep: cepInput?.value?.trim() || "",
+    street: addressInputs.street?.value?.trim() || "",
+    number: addressInputs.number?.value?.trim() || "",
+    complement: addressInputs.complement?.value?.trim() || "",
+    neighborhood: addressInputs.neighborhood?.value?.trim() || "",
+    city: addressInputs.city?.value?.trim() || "",
+    state: addressInputs.state?.value?.trim() || "",
+    country: addressInputs.country?.value?.trim() || "",
+  };
+  const hasValue = Object.values(values).some((value) => value.length);
+  if (!hasValue) {
+    return null;
+  }
+  return values;
+}
+
+function buildCartItems() {
+  const items = [];
+  if (offerData?.base) {
+    items.push({
+      id: String(offerData.base.id || "base"),
+      name: offerData.base.name,
+      type: offerData.base.type || "base",
+      price_cents: offerData.base.price_cents || 0,
+      quantity: 1,
+    });
+  }
+  selectedBumps.forEach((id) => {
+    const bump = bumpMap.get(id);
+    if (!bump) return;
+    items.push({
+      id: String(bump.id),
+      name: bump.name,
+      type: bump.type || "bump",
+      price_cents: bump.price_cents || 0,
+      quantity: 1,
+    });
+  });
+  return items;
+}
+
+function getShippingData() {
+  const option = getSelectedShipping();
+  if (!option) {
+    return null;
+  }
+  return {
+    id: option.id,
+    name: option.name,
+    description: option.description || "",
+    price_cents: option.price_cents || 0,
+  };
+}
+
+function buildSummaryData(items) {
+  const subtotal = calcSubtotal();
+  const shipping = calcShipping();
+  const total = calcTotal();
+  const count = items?.length || 0;
+  return {
+    subtotal_cents: subtotal,
+    shipping_cents: shipping,
+    total_cents: total,
+    items_count: count,
+  };
+}
+
+function getTrackingData() {
+  return {
+    src: window.location.href,
+    fbp: getCookie("_fbp"),
+    fbc: getCookie("_fbc"),
+    user_agent: navigator.userAgent,
+  };
+}
+
+function buildCartPayload(stage) {
+  const items = buildCartItems();
+  const summary = buildSummaryData(items);
+  const customer = getCustomerData();
+  const address = getAddressData();
+  const shipping = getShippingData();
+  return {
+    cart_id: cartId,
+    stage,
+    status: "open",
+    customer: customer || null,
+    address: address || null,
+    items,
+    shipping: shipping || null,
+    summary,
+    subtotal_cents: summary.subtotal_cents,
+    shipping_cents: summary.shipping_cents,
+    total_cents: summary.total_cents,
+    utm: getUtmParams(),
+    tracking: getTrackingData(),
+    source: window.location.href,
+  };
+}
+
+function detectCartStage() {
+  if (isAddressComplete()) {
+    return "address";
+  }
+  return "contact";
+}
+
+function scheduleCartSync(stage) {
+  let targetStage = stage || detectCartStage();
+  if (targetStage === "address" && !isAddressComplete()) {
+    targetStage = detectCartStage();
+  }
+  clearTimeout(cartSyncTimeout);
+  cartSyncTimeout = setTimeout(() => {
+    syncCartSnapshot(targetStage);
+  }, 500);
+}
+
+async function syncCartSnapshot(stage, overrides = {}) {
+  const targetStage = stage || detectCartStage();
+  const stageLevel = CART_STAGE_PRIORITY[targetStage] || CART_STAGE_PRIORITY.contact;
+  const payload = { ...buildCartPayload(targetStage), ...overrides };
+  const signature = JSON.stringify(payload);
+  if (signature === lastCartPayloadSignature && stageLevel === cartStageLevel) {
+    return;
+  }
+
+  try {
+    await fetch("/api/public/cart", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    lastCartPayloadSignature = signature;
+    cartStageLevel = Math.max(cartStageLevel, stageLevel);
+  } catch (error) {
+    console.warn("Falha ao sincronizar carrinho", error);
+  }
+}
+
+async function recordOrder(pixData, checkoutPayload) {
+  const items = buildCartItems();
+  const summary = buildSummaryData(items);
+  const orderPayload = {
+    cart_id: cartId,
+    customer: checkoutPayload.customer,
+    address: checkoutPayload.address,
+    items,
+    shipping: checkoutPayload.shipping,
+    summary,
+    status: "pending",
+    pix: {
+      txid: pixData?.txid || "",
+      expires_at: pixData?.expires_at || null,
+      qr_code: pixData?.pix_qr_code || "",
+      copy_and_paste: pixData?.pix_code || "",
+    },
+    subtotal_cents: summary.subtotal_cents,
+    shipping_cents: summary.shipping_cents,
+    total_cents: summary.total_cents,
+    utm: getUtmParams(),
+    tracking: getTrackingData(),
+    source: window.location.href,
+  };
+
+  try {
+    await fetch("/api/public/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderPayload),
+    });
+  } catch (error) {
+    console.warn("Não foi possível registrar o pedido", error);
+  }
 }
 
 function updateSummary() {
@@ -219,10 +453,12 @@ function renderBumps(bumps = []) {
       }
       syncSelectAllState();
       updateSummary();
+      scheduleCartSync();
     });
   });
 
   updateSummary();
+  scheduleCartSync();
 }
 
 if (selectAll && addonsList) {
@@ -242,6 +478,7 @@ if (selectAll && addonsList) {
     });
     setSelectAllLabel(shouldSelect);
     updateSummary();
+    scheduleCartSync();
   });
 }
 
@@ -303,10 +540,12 @@ function renderShipping(options = []) {
       selectedShippingId = id;
       renderShipping(shippingOptions);
       updateSummary();
+      scheduleCartSync("address");
     });
   });
 
   updateSummary();
+  scheduleCartSync();
 }
 
 function normalizeCep(value = "") {
@@ -393,15 +632,29 @@ async function lookupCep(value) {
     const missingInfo = !data.logradouro || !data.localidade || !data.uf;
     setAddressReadOnly(!missingInfo);
     showCepError(missingInfo ? "Complete os dados de endereço manualmente." : "");
+    scheduleCartSync("address");
   } catch (error) {
     setAddressReadOnly(false);
     showCepError("Não encontramos o CEP. Preencha os dados manualmente.");
     resetAutoAddressFields({ preserveManual: true });
+    scheduleCartSync("address");
   }
 }
 
 function isContactComplete() {
   return contactInputs.every((input) => input.value.trim().length > 0);
+}
+
+function isAddressComplete() {
+  if (!addressOpen) {
+    return false;
+  }
+  const hasStreet = (addressInputs.street?.value || "").trim().length > 0;
+  const hasNumber = (addressInputs.number?.value || "").trim().length > 0;
+  const hasCity = (addressInputs.city?.value || "").trim().length > 0;
+  const hasState = (addressInputs.state?.value || "").trim().length > 0;
+  const hasCep = normalizeCep(cepInput?.value || "").length === 8;
+  return hasStreet && hasNumber && hasCity && hasState && hasCep;
 }
 
 function setAddressSection(open) {
@@ -427,9 +680,19 @@ function updateAddressToggleState() {
 }
 
 contactInputs.forEach((input) => {
-  input.addEventListener("input", updateAddressToggleState);
+  input.addEventListener("input", () => {
+    updateAddressToggleState();
+    scheduleCartSync("contact");
+  });
 });
 updateAddressToggleState();
+
+Object.values(addressInputs).forEach((input) => {
+  if (!input) return;
+  input.addEventListener("input", () => {
+    scheduleCartSync("address");
+  });
+});
 
 if (addressToggle) {
   addressToggle.addEventListener("click", () => {
@@ -441,10 +704,12 @@ if (addressToggle) {
 if (cepInput) {
   cepInput.addEventListener("input", (event) => {
     event.target.value = formatCepDisplay(event.target.value);
+    scheduleCartSync("address");
   });
 
   cepInput.addEventListener("blur", (event) => {
     lookupCep(event.target.value);
+    scheduleCartSync("address");
   });
 }
 
@@ -481,6 +746,7 @@ async function loadOffer() {
   renderBumps(offerData.bumps || []);
   renderShipping(offerData.shipping || []);
   updateSummary();
+  scheduleCartSync();
 }
 
 form.addEventListener("submit", async (event) => {
@@ -561,6 +827,7 @@ form.addEventListener("submit", async (event) => {
   });
 
   try {
+    await syncCartSnapshot("payment");
     const data = await createPixCharge(payload);
     pixQr.src = data.pix_qr_code;
     pixCode.value = data.pix_code;
@@ -573,6 +840,7 @@ form.addEventListener("submit", async (event) => {
       bumps: Array.from(selectedBumps),
       txid: data.txid || "",
     });
+    recordOrder(data, payload);
   } catch (error) {
     trackCheckout("checkout_error", { message: error.message });
     alert(error.message || "Erro na conexão com Pix");
