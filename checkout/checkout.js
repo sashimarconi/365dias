@@ -409,7 +409,9 @@ function updateAddressToggleState() {
   if (!addressToggle) return;
   const ready = isContactComplete();
   addressToggle.disabled = !ready;
-  if (!ready && addressOpen) {
+  if (ready && !addressOpen) {
+    setAddressSection(true);
+  } else if (!ready && addressOpen) {
     setAddressSection(false);
   }
 }
