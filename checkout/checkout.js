@@ -8,6 +8,7 @@ const productCover = document.getElementById("product-cover");
 const productTitle = document.getElementById("product-title");
 const productDescription = document.getElementById("product-description");
 const productPrice = document.getElementById("product-price");
+const productComparePrice = document.getElementById("product-compare-price");
 const addonsSection = document.getElementById("addons-section");
 const addonsList = document.getElementById("addons-list");
 const selectAll = document.getElementById("select-all");
@@ -450,6 +451,15 @@ async function loadOffer() {
   productDescription.textContent = base.description ||
     "Receba seu material imediatamente após a confirmação.";
   productPrice.textContent = `R$ ${formatPrice(base.price_cents)}`;
+  if (productComparePrice) {
+    if (base.compare_price_cents && base.compare_price_cents > base.price_cents) {
+      productComparePrice.textContent = `R$ ${formatPrice(base.compare_price_cents)}`;
+      productComparePrice.classList.remove("hidden");
+    } else {
+      productComparePrice.textContent = "";
+      productComparePrice.classList.add("hidden");
+    }
+  }
   if (base.image_url) {
     productCover.src = base.image_url;
   } else {

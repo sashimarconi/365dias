@@ -26,6 +26,10 @@ module.exports = async (req, res) => {
       name: body.name,
       description: body.description || "",
       price_cents: Number(body.price_cents || 0),
+      compare_price_cents:
+        body.compare_price_cents === undefined || body.compare_price_cents === null || body.compare_price_cents === ""
+          ? null
+          : Number(body.compare_price_cents),
       active: body.active !== false,
       sort: Number(body.sort || 0),
       image_url: body.image_url || "",
@@ -38,12 +42,13 @@ module.exports = async (req, res) => {
 
     try {
       const result = await query(
-        "insert into products (type, name, description, price_cents, active, sort, image_url) values ($1, $2, $3, $4, $5, $6, $7) returning *",
+        "insert into products (type, name, description, price_cents, compare_price_cents, active, sort, image_url) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *",
         [
           item.type,
           item.name,
           item.description,
           item.price_cents,
+          item.compare_price_cents,
           item.active,
           item.sort,
           item.image_url,

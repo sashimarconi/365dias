@@ -4,6 +4,7 @@ create table if not exists products (
   name text not null,
   description text,
   price_cents integer not null check (price_cents >= 0),
+  compare_price_cents integer check (compare_price_cents >= 0),
   active boolean not null default true,
   sort integer not null default 0,
   image_url text,

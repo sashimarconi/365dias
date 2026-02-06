@@ -194,6 +194,30 @@ body {
   font-size: 22px;
 }
 
+.product-card__prices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.product-card__compare {
+  font-size: 15px;
+  color: #1c1d2b;
+  text-decoration: line-through;
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+.product-card__compare.hidden {
+  display: none;
+}
+
+.product-card__prices strong {
+  color: #c51616;
+  font-size: 24px;
+}
+
 .divider {
   border: none;
   border-top: 1px solid var(--border);

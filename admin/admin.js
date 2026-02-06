@@ -74,6 +74,9 @@ function renderItems(items) {
         <input data-field="price_cents" type="number" value="${
           item.price_cents || 0
         }" />
+        <input data-field="compare_price_cents" type="number" value="${
+          item.compare_price_cents || ""
+        }" placeholder="Preço antigo" />
         <input data-field="sort" type="number" value="${item.sort || 0}" />
         <input data-field="image_url" value="${item.image_url || ""}" />
       </div>
@@ -118,6 +121,11 @@ function collectItem(el) {
   });
   payload.active = payload.active === "true";
   payload.price_cents = Number(payload.price_cents || 0);
+  if (payload.compare_price_cents !== undefined) {
+    payload.compare_price_cents = payload.compare_price_cents
+      ? Number(payload.compare_price_cents)
+      : null;
+  }
   payload.sort = Number(payload.sort || 0);
   return payload;
 }
@@ -148,6 +156,9 @@ newItemForm.addEventListener("submit", async (event) => {
   const payload = Object.fromEntries(formData.entries());
   payload.active = payload.active === "true";
   payload.price_cents = Number(payload.price_cents || 0);
+  payload.compare_price_cents = payload.compare_price_cents
+    ? Number(payload.compare_price_cents)
+    : null;
   payload.sort = Number(payload.sort || 0);
 
   await fetch("/api/admin/items", {
