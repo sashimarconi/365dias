@@ -1,5 +1,6 @@
 const { query } = require("../lib/db");
 const { requireAuth } = require("../lib/auth");
+const { ensureAnalyticsTables } = require("./ensure-tables");
 
 module.exports = async (req, res) => {
   if (!requireAuth(req, res)) {
@@ -12,6 +13,8 @@ module.exports = async (req, res) => {
   }
 
   try {
+    await ensureAnalyticsTables();
+
     const metricsResult = await query(
       `with day_start as (select date_trunc('day', now()) as start_ts)
        select

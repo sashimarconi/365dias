@@ -1,5 +1,6 @@
 const { query } = require("../lib/db");
 const { parseJson } = require("../lib/parse-json");
+const { ensureAnalyticsTables } = require("./ensure-tables");
 
 const FALLBACK_PAGE = "unknown";
 const MAX_STRING = 512;
@@ -39,6 +40,8 @@ module.exports = async (req, res) => {
     res.status(400).json({ error: "Invalid JSON" });
     return;
   }
+
+  await ensureAnalyticsTables();
 
   const sessionId = sanitizeString(body.session_id || body.sessionId);
   const eventType = normalizeEventType(body.type || body.event_type);
