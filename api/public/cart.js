@@ -63,6 +63,7 @@ module.exports = async (req, res) => {
   const customer = asObject(body.customer) || {};
   const address = asObject(body.address) || null;
   const items = Array.isArray(body.items) ? body.items : [];
+  const itemsJson = JSON.stringify(items);
   const shipping = asObject(body.shipping) || null;
   const summary = asObject(body.summary) || null;
   const utm = asObject(body.utm) || null;
@@ -112,7 +113,7 @@ module.exports = async (req, res) => {
         cartKey,
         customer,
         address,
-        items,
+        itemsJson,
         shipping,
         summary,
         stage,

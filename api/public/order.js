@@ -46,6 +46,7 @@ module.exports = async (req, res) => {
 
   const address = asObject(body.address);
   const items = Array.isArray(body.items) ? body.items : [];
+  const itemsJson = JSON.stringify(items);
   const shipping = asObject(body.shipping);
   const summary = asObject(body.summary);
   const utm = asObject(body.utm);
@@ -89,7 +90,7 @@ module.exports = async (req, res) => {
         cartKey,
         customer,
         address,
-        items,
+        itemsJson,
         shipping,
         summary,
         status,
@@ -117,7 +118,7 @@ module.exports = async (req, res) => {
              updated_at = now(),
              last_stage_at = now()
        where cart_key = $1`,
-      [cartKey, summary, items, shipping, totalCents, subtotalCents, shippingCents]
+      [cartKey, summary, itemsJson, shipping, totalCents, subtotalCents, shippingCents]
     );
 
     res.json({ orderId: result.rows[0]?.id || null });
