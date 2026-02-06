@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     const summary = metricsResult.rows[0] || {};
 
     const timelineResult = await query(
-      `with window as (
+      `with time_window as (
          select generate_series(
            date_trunc('hour', now()) - interval '11 hour',
            date_trunc('hour', now()),
@@ -47,17 +47,17 @@ module.exports = async (req, res) => {
          from analytics_events
          where created_at >= date_trunc('hour', now()) - interval '11 hour'
          group by 1
-       )
-       select
-         window.bucket,
+        )
+        select
+          time_window.bucket,
          coalesce(agg.visits, 0) as visits,
          coalesce(agg.checkout_views, 0) as checkout_views,
          coalesce(agg.checkout_starts, 0) as checkout_starts,
          coalesce(agg.pix, 0) as pix,
          coalesce(agg.purchases, 0) as purchases
-       from window
-       left join agg on agg.bucket = window.bucket
-       order by window.bucket`
+        from time_window
+        left join agg on agg.bucket = time_window.bucket
+        order by time_window.bucket`
     );
 
     const checkoutStarts = Number(summary.checkout_starts_today) || 0;
