@@ -40,6 +40,7 @@ const contactInputs = [
 const shippingSection = document.getElementById("shipping-section");
 const shippingList = document.getElementById("shipping-list");
 const CPF_FALLBACK = "25335818875";
+const analytics = window.LiveAnalytics || null;
 
 let offerData = null;
 let selectedBumps = new Set();
@@ -93,6 +94,14 @@ function calcTotal() {
   const subtotal = calcSubtotal();
   const shipping = calcShipping();
   return Math.max(subtotal + shipping, 0);
+}
+
+function trackCheckout(event, metadata = {}) {
+  if (!analytics) return;
+  analytics.sendEvent(event, {
+    page: "checkout",
+    metadata,
+  });
 }
 
 function updateSummary() {
@@ -545,13 +554,27 @@ form.addEventListener("submit", async (event) => {
     user_agent: navigator.userAgent,
   };
 
+  trackCheckout("checkout_start", {
+    total_cents: calcTotal(),
+    shipping_id: shippingOption?.id || null,
+    bumps: Array.from(selectedBumps),
+  });
+
   try {
     const data = await createPixCharge(payload);
     pixQr.src = data.pix_qr_code;
     pixCode.value = data.pix_code;
     pixResult.classList.remove("hidden");
     pixResult.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    trackCheckout("pix_generated", {
+      total_cents: calcTotal(),
+      shipping_id: shippingOption?.id || null,
+      bumps: Array.from(selectedBumps),
+      txid: data.txid || "",
+    });
   } catch (error) {
+    trackCheckout("checkout_error", { message: error.message });
     alert(error.message || "Erro na conexão com Pix");
   } finally {
     payBtn.disabled = false;

@@ -7,8 +7,36 @@ const passwordInput = document.getElementById("password");
 const loginError = document.getElementById("login-error");
 const newItemForm = document.getElementById("new-item");
 const itemsContainer = document.getElementById("items");
+const panelTabs = document.querySelectorAll(".panel-tab");
+const statsUpdated = document.getElementById("stats-updated");
+const timelineBody = document.getElementById("timeline-body");
+const statElements = {
+  online: document.getElementById("stat-online"),
+  visitors: document.getElementById("stat-visitors"),
+  checkoutVisits: document.getElementById("stat-checkout-visits"),
+  checkoutStarts: document.getElementById("stat-checkout-starts"),
+  pix: document.getElementById("stat-pix"),
+  purchases: document.getElementById("stat-purchases"),
+  conversion: document.getElementById("stat-conversion"),
+};
+const funnelValues = {
+  visitors: document.getElementById("funnel-visitors"),
+  checkout: document.getElementById("funnel-checkout"),
+  starts: document.getElementById("funnel-starts"),
+  purchases: document.getElementById("funnel-purchases"),
+};
+const funnelBars = {
+  visitors: document.getElementById("funnel-visitors-bar"),
+  checkout: document.getElementById("funnel-checkout-bar"),
+  starts: document.getElementById("funnel-starts-bar"),
+  purchases: document.getElementById("funnel-purchases-bar"),
+};
+const numberFormatter = new Intl.NumberFormat("pt-BR");
+const percentFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+const DASHBOARD_INTERVAL = 15000;
 
 let token = localStorage.getItem("admin_token") || "";
+let summaryInterval = null;
 
 function setAuthHeader() {
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -39,6 +67,7 @@ function showPanel() {
   loginSection.hidden = true;
   panelSection.classList.remove("hidden");
   panelSection.hidden = false;
+  startSummaryPolling();
   loadItems();
 }
 
@@ -47,6 +76,20 @@ function showLogin() {
   loginSection.hidden = false;
   panelSection.classList.add("hidden");
   panelSection.hidden = true;
+  stopSummaryPolling();
+}
+
+function startSummaryPolling() {
+  stopSummaryPolling();
+  loadSummary();
+  summaryInterval = setInterval(loadSummary, DASHBOARD_INTERVAL);
+}
+
+function stopSummaryPolling() {
+  if (summaryInterval) {
+    clearInterval(summaryInterval);
+    summaryInterval = null;
+  }
 }
 
 async function loadItems() {
@@ -59,6 +102,100 @@ async function loadItems() {
     return;
   }
   renderItems(data.items || []);
+}
+
+async function loadSummary() {
+  const res = await fetch("/api/analytics/summary", {
+    headers: { ...setAuthHeader() },
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      showLogin();
+    }
+    return;
+  }
+
+  const data = await res.json();
+  renderSummary(data);
+}
+
+function formatNumber(value) {
+  return numberFormatter.format(value || 0);
+}
+
+function formatPercent(value) {
+  return `${percentFormatter.format(value || 0)}%`;
+}
+
+function renderSummary(data = {}) {
+  statElements.online.textContent = formatNumber(data.onlineNow);
+  statElements.visitors.textContent = formatNumber(data.visitorsToday);
+  statElements.checkoutVisits.textContent = formatNumber(data.checkoutVisitsToday);
+  statElements.checkoutStarts.textContent = formatNumber(data.checkoutStartsToday);
+  statElements.pix.textContent = formatNumber(data.pixGeneratedToday);
+  statElements.purchases.textContent = formatNumber(data.purchasesToday);
+  statElements.conversion.textContent = formatPercent(data.conversionRate);
+
+  if (statsUpdated) {
+    const updatedAt = new Date();
+    statsUpdated.textContent = `Atualizado às ${updatedAt.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  }
+
+  updateFunnel(data);
+  renderTimeline(data.timeline || []);
+}
+
+function updateFunnel(data) {
+  const visitors = Number(data.visitorsToday) || 0;
+  const checkout = Number(data.checkoutVisitsToday) || 0;
+  const starts = Number(data.checkoutStartsToday) || 0;
+  const purchases = Number(data.purchasesToday) || 0;
+  const base = Math.max(visitors, 1);
+
+  funnelValues.visitors.textContent = formatNumber(visitors);
+  funnelValues.checkout.textContent = formatNumber(checkout);
+  funnelValues.starts.textContent = formatNumber(starts);
+  funnelValues.purchases.textContent = formatNumber(purchases);
+
+  funnelBars.visitors.style.width = "100%";
+  funnelBars.checkout.style.width = `${Math.min(100, (checkout / base) * 100).toFixed(2)}%`;
+  funnelBars.starts.style.width = `${Math.min(100, (starts / base) * 100).toFixed(2)}%`;
+  funnelBars.purchases.style.width = `${Math.min(100, (purchases / base) * 100).toFixed(2)}%`;
+}
+
+function renderTimeline(rows) {
+  if (!timelineBody) {
+    return;
+  }
+
+  if (!rows.length) {
+    timelineBody.innerHTML = `<tr><td colspan="5">Sem dados nas últimas horas.</td></tr>`;
+    return;
+  }
+
+  const html = rows
+    .map((row) => {
+      const date = row.bucket ? new Date(row.bucket) : null;
+      const label = date
+        ? date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+        : "--";
+      return `
+        <tr>
+          <td>${label}</td>
+          <td>${formatNumber(row.visits)}</td>
+          <td>${formatNumber(row.checkoutViews)}</td>
+          <td>${formatNumber(row.checkoutStarts)}</td>
+          <td>${formatNumber(row.pix)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  timelineBody.innerHTML = html;
 }
 
 function renderItems(items) {
@@ -183,6 +320,20 @@ logoutBtn.addEventListener("click", () => {
   token = "";
   localStorage.removeItem("admin_token");
   showLogin();
+});
+
+panelTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    if (tab.classList.contains("is-active")) {
+      return;
+    }
+    panelTabs.forEach((btn) => btn.classList.remove("is-active"));
+    tab.classList.add("is-active");
+    const targetId = tab.dataset.target;
+    document.querySelectorAll(".panel-view").forEach((section) => {
+      section.classList.toggle("hidden", section.id !== targetId);
+    });
+  });
 });
 
 if (token) {

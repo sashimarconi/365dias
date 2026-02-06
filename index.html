@@ -39,6 +39,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
 	<meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3e2b3ca0-f59f-4b27-aa4d-adb5181c6cef/id-preview-bd4b992d--495d641a-5653-45e9-bc2f-4aca6d217d46.lovable.app-1770257155142.png" />
+    <script defer src="/assets/live-analytics.js"></script>
     <script type="module" crossorigin src="assets/index-DTFFxgRF.js"></script>
     <link rel="stylesheet" crossorigin href="assets/index-CCzLaXNs.css">
         <style>
@@ -60,7 +61,7 @@
   
 <script defer src="_flock.js" data-proxy-url="https://devocionaldos365dias.lovable.app/~api/analytics"></script></head>
 
-  <body>
+    <body data-analytics-page="landing">
         <header class="site-logo-bar">
             <img src="https://cdn.awsli.com.br/400x300/618/618258/logo/85d7098802.png" alt="Centro Dom Bosco" />
         </header>
@@ -76,6 +77,19 @@
                     wired.add(el);
                     el.addEventListener("click", (event) => {
                         event.preventDefault();
+                        try {
+                            if (window.LiveAnalytics) {
+                                window.LiveAnalytics.sendEvent("cta_click", {
+                                    page: "landing",
+                                    metadata: {
+                                        label: (el.textContent || el.getAttribute("aria-label") || "Botão").trim(),
+                                        href: window.location.href,
+                                    },
+                                });
+                            }
+                        } catch (err) {
+                            console.warn("Analytics CTA", err);
+                        }
                         window.location.href = checkoutUrl;
                     });
                 };
