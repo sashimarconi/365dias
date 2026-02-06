@@ -614,7 +614,10 @@ async function openInspector(type, id) {
   inspectorTitle.textContent = "Carregando...";
   inspectorBody.innerHTML = '<p class="muted">Buscando detalhes...</p>';
 
-  const endpoint = type === "order" ? `/api/admin/orders/${id}` : `/api/admin/carts/${id}`;
+  const endpoint =
+    type === "order"
+      ? `/api/admin/orders?id=${encodeURIComponent(id)}`
+      : `/api/admin/carts?id=${encodeURIComponent(id)}`;
   try {
     const res = await fetch(endpoint, {
       headers: { ...setAuthHeader() },

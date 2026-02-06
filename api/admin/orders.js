@@ -12,8 +12,23 @@ module.exports = async (req, res) => {
     return;
   }
 
+  const { id } = req.query || {};
+
   try {
     await ensureSalesTables();
+
+    if (id) {
+      const detail = await query(
+        `select * from checkout_orders where id = $1 limit 1`,
+        [id]
+      );
+      if (!detail.rows?.length) {
+        res.status(404).json({ error: "Order not found" });
+        return;
+      }
+      res.json({ order: detail.rows[0] });
+      return;
+    }
 
     const [ordersResult, statsResult] = await Promise.all([
       query(

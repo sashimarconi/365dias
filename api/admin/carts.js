@@ -12,8 +12,23 @@ module.exports = async (req, res) => {
     return;
   }
 
+  const { id } = req.query || {};
+
   try {
     await ensureSalesTables();
+
+    if (id) {
+      const detail = await query(
+        "select * from checkout_carts where id = $1 limit 1",
+        [id]
+      );
+      if (!detail.rows?.length) {
+        res.status(404).json({ error: "Cart not found" });
+        return;
+      }
+      res.json({ cart: detail.rows[0] });
+      return;
+    }
 
     const [cartsResult, statsResult] = await Promise.all([
       query(
