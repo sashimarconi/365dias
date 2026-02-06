@@ -1,6 +1,6 @@
-const { query } = require("../lib/db");
-const { requireAuth } = require("../lib/auth");
-const { ensureAnalyticsTables } = require("../lib/ensure-analytics");
+const { query } = require("../../lib/db");
+const { requireAuth } = require("../../lib/auth");
+const { ensureAnalyticsTables } = require("../../lib/ensure-analytics");
 
 module.exports = async (req, res) => {
   if (!requireAuth(req, res)) {

@@ -1,4 +1,4 @@
-const { parseJson } = require("./lib/parse-json");
+const { parseJson } = require("../lib/parse-json");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {

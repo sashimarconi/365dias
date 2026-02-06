@@ -1,7 +1,7 @@
-const { query } = require("./lib/db");
-const { parseJson } = require("./lib/parse-json");
-const { signToken, requireAuth } = require("./lib/auth");
-const { ensureSalesTables } = require("./lib/ensure-sales");
+const { query } = require("../lib/db");
+const { parseJson } = require("../lib/parse-json");
+const { signToken, requireAuth } = require("../lib/auth");
+const { ensureSalesTables } = require("../lib/ensure-sales");
 
 function normalizeItemPayload(body = {}) {
   return {

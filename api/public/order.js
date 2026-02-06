@@ -1,6 +1,6 @@
-const { parseJson } = require("../lib/parse-json");
-const { query } = require("../lib/db");
-const { ensureSalesTables } = require("../lib/ensure-sales");
+const { parseJson } = require("../../lib/parse-json");
+const { query } = require("../../lib/db");
+const { ensureSalesTables } = require("../../lib/ensure-sales");
 
 function asObject(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {

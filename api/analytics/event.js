@@ -1,6 +1,6 @@
-const { query } = require("../lib/db");
-const { parseJson } = require("../lib/parse-json");
-const { ensureAnalyticsTables } = require("../lib/ensure-analytics");
+const { query } = require("../../lib/db");
+const { parseJson } = require("../../lib/parse-json");
+const { ensureAnalyticsTables } = require("../../lib/ensure-analytics");
 
 const FALLBACK_PAGE = "unknown";
 const MAX_STRING = 512;

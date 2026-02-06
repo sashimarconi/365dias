@@ -1,6 +1,6 @@
-const { parseJson } = require("../lib/parse-json");
-const { query } = require("../lib/db");
-const { ensureSalesTables } = require("../lib/ensure-sales");
+const { parseJson } = require("../../lib/parse-json");
+const { query } = require("../../lib/db");
+const { ensureSalesTables } = require("../../lib/ensure-sales");
 
 const STAGE_PRIORITY = {
   contact: 1,
