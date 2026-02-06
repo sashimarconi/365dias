@@ -69,6 +69,18 @@
         <script>
             (() => {
                 const checkoutUrl = "/checkout/";
+                const buildCheckoutHref = () => {
+                    if (!window.location?.search) {
+                        return checkoutUrl;
+                    }
+                    try {
+                        const url = new URL(checkoutUrl, window.location.origin);
+                        url.search = window.location.search;
+                        return `${url.pathname}${url.search}`;
+                    } catch (error) {
+                        return `${checkoutUrl}${window.location.search}`;
+                    }
+                };
                 const selectorList = 'button, [role="button"], a[class*="btn"], a[class*="cta"], a.button';
                 const wired = new WeakSet();
 
@@ -90,7 +102,7 @@
                         } catch (err) {
                             console.warn("Analytics CTA", err);
                         }
-                        window.location.href = checkoutUrl;
+                        window.location.href = buildCheckoutHref();
                     });
                 };
 
