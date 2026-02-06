@@ -229,8 +229,24 @@ async function handleCarts(req, res) {
   }
 }
 
+function getPathSegments(req) {
+  const raw = req.query?.path;
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+  if (typeof raw === "string" && raw.length > 0) {
+    return raw.split("/").filter(Boolean);
+  }
+  return [];
+}
+
 module.exports = async (req, res) => {
-  const path = req.query?.path || "";
+  const segments = getPathSegments(req);
+  const path = segments[0] || "";
+
+  if (segments.length > 1 && !req.query.id) {
+    req.query.id = segments[1];
+  }
 
   if (path === "login") {
     await handleLogin(req, res);

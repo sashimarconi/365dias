@@ -2,14 +2,5 @@
   "version": 2,
   "framework": null,
   "buildCommand": null,
-  "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/api/admin/login", "destination": "/api/admin-router?path=login" },
-    { "source": "/api/admin/items", "destination": "/api/admin-router?path=items" },
-    { "source": "/api/admin/items/:id", "destination": "/api/admin-router?path=items&id=:id" },
-    { "source": "/api/admin/orders", "destination": "/api/admin-router?path=orders" },
-    { "source": "/api/admin/orders/:id", "destination": "/api/admin-router?path=orders&id=:id" },
-    { "source": "/api/admin/carts", "destination": "/api/admin-router?path=carts" },
-    { "source": "/api/admin/carts/:id", "destination": "/api/admin-router?path=carts&id=:id" }
-  ]
+  "outputDirectory": "."
 }
