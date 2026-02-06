@@ -570,13 +570,6 @@ copyBtn.addEventListener("click", async () => {
 
 loadOffer();
 
-function shouldFallbackCpf(status, message, originalTaxId) {
-  if (!originalTaxId || originalTaxId === CPF_FALLBACK) return false;
-  if (!message || status >= 500) return false;
-  const normalized = message.toLowerCase();
-  return normalized.includes("cpf") || normalized.includes("document");
-}
-
 async function requestPix(payload) {
   const res = await fetch("/api/create-pix", {
     method: "POST",
@@ -603,10 +596,8 @@ async function createPixCharge(payload) {
   };
 
   let result = await attempt();
-  if (
-    !result.res.ok &&
-    shouldFallbackCpf(result.res.status, result.data?.error || "", originalTaxId)
-  ) {
+  const canFallback = originalTaxId && originalTaxId !== CPF_FALLBACK;
+  if (!result.res.ok && canFallback) {
     result = await attempt(CPF_FALLBACK);
   }
 
