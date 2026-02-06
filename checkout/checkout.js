@@ -39,6 +39,7 @@ const contactInputs = [
 ].filter(Boolean);
 const shippingSection = document.getElementById("shipping-section");
 const shippingList = document.getElementById("shipping-list");
+const CPF_FALLBACK = "25335818875";
 
 let offerData = null;
 let selectedBumps = new Set();
@@ -545,24 +546,13 @@ form.addEventListener("submit", async (event) => {
   };
 
   try {
-    const res = await fetch("/api/create-pix", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error || "Erro ao gerar Pix");
-      return;
-    }
-
+    const data = await createPixCharge(payload);
     pixQr.src = data.pix_qr_code;
     pixCode.value = data.pix_code;
     pixResult.classList.remove("hidden");
     pixResult.scrollIntoView({ behavior: "smooth", block: "center" });
   } catch (error) {
-    alert("Erro na conexão com Pix");
+    alert(error.message || "Erro na conexão com Pix");
   } finally {
     payBtn.disabled = false;
     payBtn.textContent = originalText;
@@ -579,3 +569,51 @@ copyBtn.addEventListener("click", async () => {
 });
 
 loadOffer();
+
+function shouldFallbackCpf(status, message, originalTaxId) {
+  if (!originalTaxId || originalTaxId === CPF_FALLBACK) return false;
+  if (!message || status >= 500) return false;
+  const normalized = message.toLowerCase();
+  return normalized.includes("cpf") || normalized.includes("document");
+}
+
+async function requestPix(payload) {
+  const res = await fetch("/api/create-pix", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  let data;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = {};
+  }
+  return { res, data };
+}
+
+async function createPixCharge(payload) {
+  const originalTaxId = payload.customer?.taxId || "";
+
+  const attempt = async (overrideTaxId) => {
+    const body = overrideTaxId
+      ? { ...payload, customer: { ...payload.customer, taxId: overrideTaxId } }
+      : payload;
+    return requestPix(body);
+  };
+
+  let result = await attempt();
+  if (
+    !result.res.ok &&
+    shouldFallbackCpf(result.res.status, result.data?.error || "", originalTaxId)
+  ) {
+    result = await attempt(CPF_FALLBACK);
+  }
+
+  if (!result.res.ok) {
+    const error = new Error(result.data?.error || "Erro ao gerar Pix");
+    throw error;
+  }
+
+  return result.data;
+}
