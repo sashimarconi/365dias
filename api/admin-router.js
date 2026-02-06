@@ -237,7 +237,12 @@ function getPathSegments(req) {
   if (typeof raw === "string" && raw.length > 0) {
     return raw.split("/").filter(Boolean);
   }
-  return [];
+  const url = req.url || "";
+  const cleaned = url.split("?")[0].replace(/^\/api\/admin\/?/, "");
+  if (!cleaned) {
+    return [];
+  }
+  return cleaned.split("/").filter(Boolean);
 }
 
 module.exports = async (req, res) => {
