@@ -577,7 +577,7 @@ function collectItem(el) {
 }
 
 async function updateItem(id, payload) {
-  await fetch(`/api/admin/items/${id}`, {
+  await fetch(`/api/admin/items?id=${encodeURIComponent(id)}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -589,7 +589,7 @@ async function updateItem(id, payload) {
 }
 
 async function deleteItem(id) {
-  await fetch(`/api/admin/items/${id}`, {
+  await fetch(`/api/admin/items?id=${encodeURIComponent(id)}`, {
     method: "DELETE",
     headers: { ...setAuthHeader() },
   });

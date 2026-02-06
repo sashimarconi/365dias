@@ -1,4 +1,4 @@
-const { query } = require("../lib/db");
+const { query } = require("./db");
 
 let ensured = false;
 
