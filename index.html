@@ -23,11 +23,66 @@
 	<meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3e2b3ca0-f59f-4b27-aa4d-adb5181c6cef/id-preview-bd4b992d--495d641a-5653-45e9-bc2f-4aca6d217d46.lovable.app-1770257155142.png" />
     <script type="module" crossorigin src="assets/index-DTFFxgRF.js"></script>
     <link rel="stylesheet" crossorigin href="assets/index-CCzLaXNs.css">
+        <style>
+            .site-logo-bar {
+                width: 100%;
+                background: #ffffff;
+                border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+                padding: 14px 0;
+                display: flex;
+                justify-content: center;
+            }
+
+            .site-logo-bar img {
+                height: 52px;
+                width: auto;
+            }
+        </style>
   
 <script defer src="_flock.js" data-proxy-url="https://devocionaldos365dias.lovable.app/~api/analytics"></script></head>
 
   <body>
+        <header class="site-logo-bar">
+            <img src="https://cdn.awsli.com.br/400x300/618/618258/logo/85d7098802.png" alt="Centro Dom Bosco" />
+        </header>
     <div id="root"></div>
+        <script>
+            (() => {
+                const checkoutUrl = "/checkout/";
+                const selectorList = 'button, [role="button"], a[class*="btn"], a[class*="cta"], a.button';
+                const wired = new WeakSet();
+
+                const wire = (el) => {
+                    if (wired.has(el)) return;
+                    wired.add(el);
+                    el.addEventListener("click", (event) => {
+                        event.preventDefault();
+                        window.location.href = checkoutUrl;
+                    });
+                };
+
+                const scan = (root = document) => {
+                    if (root.matches && root.matches(selectorList)) {
+                        wire(root);
+                    }
+                    root.querySelectorAll?.(selectorList).forEach(wire);
+                };
+
+                document.addEventListener("DOMContentLoaded", () => {
+                    scan();
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            mutation.addedNodes.forEach((node) => {
+                                if (node.nodeType !== 1) return;
+                                scan(node);
+                            });
+                        });
+                    });
+                    observer.observe(document.body, { childList: true, subtree: true });
+                });
+            })();
+        </script>
 </body>
 
 <!-- Mirrored from devocionaldos365dias.lovable.app/ by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 05 Feb 2026 16:51:57 GMT -->
